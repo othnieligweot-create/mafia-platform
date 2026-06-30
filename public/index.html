@@ -755,25 +755,35 @@
 
             let tokenData;
             try {
-                const response = await fetch('/api/video-token', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        username: username,
-                        room: currentRoom,
-                        isModerator: amIHost
-                    })
-                });
+                let response;
+                try {
+                    response = await fetch('/api/video-token', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            username: username,
+                            room: currentRoom,
+                            isModerator: amIHost
+                        })
+                    });
+                } catch (networkErr) {
+                    throw new Error('Network error reaching server: ' + networkErr.message);
+                }
 
                 if (!response.ok) {
-                    const errBody = await response.json().catch(() => ({}));
+                    let errBody = {};
+                    try {
+                        errBody = await response.json();
+                    } catch (parseErr) {
+                        throw new Error(`Server returned ${response.status} ${response.statusText} (non-JSON response)`);
+                    }
                     throw new Error(errBody.error || `Server returned ${response.status}`);
                 }
 
                 tokenData = await response.json();
             } catch (err) {
                 console.error("Failed to fetch JaaS video token:", err);
-                newsFeed.innerText = "⚠️ Couldn't start video — server didn't issue a video token. Check JaaS configuration.";
+                newsFeed.innerText = "⚠️ Video token error: " + err.message;
                 newsFeed.classList.remove('hidden');
                 return;
             }
