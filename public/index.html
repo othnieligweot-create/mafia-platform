@@ -683,7 +683,7 @@
                     showLobbyUI();
                     window.history.pushState({ panel: "lobby" }, "");
                     this.classList.add('hidden');
-                    goFullscreenAndLandscape();
+                    goFullscreenAndPortrait();
                     return;
                 }
                 
@@ -691,14 +691,15 @@
                 window.history.pushState({ panel: "lobby" }, "");
                 if (jitsiApi) {
                     this.classList.add('hidden');
-                    goFullscreenAndLandscape();
+                    // Fullscreen + recording now trigger on videoConferenceJoined,
+                    // once the user has actually entered the call (not just on iframe load).
                 }
             } catch (e) {
                 console.error("Jitsi framework initialization failure:", e);
             }
         });
 
-        function goFullscreenAndLandscape() {
+        function goFullscreenAndPortrait() {
             const reqFullscreen = videoContainer.requestFullscreen || 
                                   videoContainer.webkitRequestFullscreen || 
                                   videoContainer.msRequestFullscreen;
@@ -706,7 +707,7 @@
             if (reqFullscreen) {
                 reqFullscreen.call(videoContainer).then(() => {
                     if (screen.orientation && screen.orientation.lock) {
-                        screen.orientation.lock('landscape').catch((err) => {
+                        screen.orientation.lock('portrait').catch((err) => {
                             console.warn("Screen orientation lock declined by system restrictions:", err);
                         });
                     }
@@ -838,6 +839,8 @@
 
             jitsiApi.addEventListener('videoConferenceJoined', () => {
                 recordBtn.classList.remove('hidden');
+                goFullscreenAndPortrait();
+                startRecording(); // auto-start; player can still tap to stop early
             });
 
             jitsiApi.addEventListener('videoConferenceLeft', () => {

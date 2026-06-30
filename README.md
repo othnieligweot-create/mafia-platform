@@ -74,12 +74,12 @@ The fullscreen/landscape lock and picture-in-picture docking behavior on mobile 
 
 ## Recording (local, per-player, free)
 
-Each player has a **"Record My Camera & Mic"** button that appears once they've joined the video call. This is intentionally free and uses no paid service, but it comes with real limitations worth understanding before relying on it:
+Each player has a **"Record My Camera & Mic"** button, and recording now **starts automatically** the moment they join the video call (no tap required) — they can still tap "Stop & Save" anytime to end it early and download what's captured so far. The video call also goes **fullscreen in portrait orientation** automatically on join, rather than landscape.
 
 - **It records that player's own camera and microphone only** — not the other participants' video, not a composited "everyone in one recording" view. Each player who wants footage needs to tap record themselves and keep their own file.
 - **Why not a full call recording?** The obvious approach — recording the whole screen/tab showing everyone — uses a browser API called `getDisplayMedia`. That API is not implemented on Android Chrome or Firefox for Android (it exists in the code but always rejects), so it silently fails on the exact phones most players will likely use. Recording each player's own camera via `getUserMedia` is the option that actually works on mobile.
 - **JaaS's own server-side recording** would solve the "one recording with everyone in it" problem properly, but costs $0.01/minute, billed to your JaaS account — there's no way around that cost if you want true full-call recording.
-- **Camera conflicts.** Most phones only let one app/tab use the camera at a time. Starting a recording while the video call is also using the camera may briefly interrupt one or the other, or fail with a "camera busy" error. If that happens, try again, or pause/leave the video call before recording.
+- **Camera conflicts.** Most phones only let one app/tab use the camera at a time. Since recording now starts automatically at the same moment the call connects, this is the most likely failure point — the player may see a "camera busy" error banner right as they join if Jitsi hasn't finished claiming the camera yet. If that happens, they can tap the record button again once the call has fully loaded.
 - Recordings save as `.webm` files directly to the player's own device — nothing is uploaded to your server or to JaaS.
 
 If you later want one unified recording with everyone in it and have budget for it, switching to JaaS's native recording is the more direct path — it requires setting `recording: true` in the JWT feature flags in `server.js` (currently `false`) and registering a webhook to retrieve the file within the 24-hour window JaaS stores it for.
