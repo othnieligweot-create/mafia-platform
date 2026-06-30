@@ -123,8 +123,13 @@ app.get('*', (req, res) => {
 });
 
 // In-Memory Game State Databases
-const rooms = {}; 
-const userProfiles = {}; 
+const rooms = {};
+const userProfiles = {};
+
+// How long a disconnected player's seat is held before they're fully removed.
+// Lets a flaky connection or backgrounded phone reconnect without losing their
+// place in an active game. Purely in-memory — does not survive a server restart.
+const RECONNECT_GRACE_MS = 45 * 1000;
 
 io.on('connection', (socket) => {
     console.log(`🔌 Security Node Connected: ${socket.id}`);
@@ -153,21 +158,76 @@ io.on('connection', (socket) => {
             };
         }
 
+        const currentRoom = rooms[room];
+
+        // Reconnect path: if this username has a seat in this room still pending
+        // removal (within the grace window), restore it instead of creating a new
+        // player. This preserves their role, alive status, and host status across
+        // a dropped connection or backgrounded app.
+        const reconnectingUser = currentRoom.users.find(u => u.username === username && u.disconnected);
+
+        if (reconnectingUser) {
+            if (reconnectingUser.disconnectTimer) {
+                clearTimeout(reconnectingUser.disconnectTimer);
+                reconnectingUser.disconnectTimer = null;
+            }
+
+            const wasHost = currentRoom.hostId === reconnectingUser.id;
+            reconnectingUser.id = socket.id;
+            reconnectingUser.disconnected = false;
+
+            if (wasHost) {
+                currentRoom.hostId = socket.id;
+            }
+
+            socket.emit('profileUpdate', userProfiles[username]);
+            socket.emit('rejoined', {
+                role: reconnectingUser.role,
+                alive: reconnectingUser.alive,
+                phase: currentRoom.phase
+            });
+
+            if (currentRoom.hostId === socket.id) {
+                socket.emit('isHost');
+            } else {
+                socket.emit('isPlayer');
+            }
+
+            if (currentRoom.started && reconnectingUser.role) {
+                socket.emit('assignRole', reconnectingUser.role);
+            }
+
+            updateRoomUsers(room);
+            io.to(room).emit('announcement', `🔄 ${username} reconnected.`);
+            return;
+        }
+
+        // Reject joining with a username already active (and not disconnected)
+        // in this room, to avoid two sockets silently fighting over one identity.
+        const nameTaken = currentRoom.users.some(u => u.username === username && !u.disconnected);
+        if (nameTaken) {
+            socket.emit('announcement', `🚨 The handle "${username}" is already active in this room.`);
+            socket.emit('joinRejected', { reason: 'username-taken' });
+            return;
+        }
+
         const playerObject = {
             id: socket.id,
             username: username,
             role: 'civilian',
             alive: true,
-            votedFor: null
+            votedFor: null,
+            disconnected: false,
+            disconnectTimer: null
         };
 
-        rooms[room].users.push(playerObject);
+        currentRoom.users.push(playerObject);
 
         // Sync individual profile stats back to caller
         socket.emit('profileUpdate', userProfiles[username]);
 
         // Broadcast host and state rights
-        if (rooms[room].hostId === socket.id) {
+        if (currentRoom.hostId === socket.id) {
             socket.emit('isHost');
         } else {
             socket.emit('isPlayer');
@@ -217,7 +277,7 @@ io.on('connection', (socket) => {
         const voter = room.users.find(u => u.id === socket.id);
         const target = room.users.find(u => u.id === targetId);
 
-        if (!voter || !voter.alive || !target || !target.alive) return;
+        if (!voter || !voter.alive || !target || !target.alive || target.disconnected) return;
 
         // Night Constraints: Non-mafia nodes cannot transmit structural data signatures
         if (room.phase === 'night' && voter.role !== 'mafia') return;
@@ -234,35 +294,119 @@ io.on('connection', (socket) => {
         io.to(roomName).emit('voteUpdate', room.votes);
     });
 
+    // ---------- Host controls ----------
+
+    socket.on('kickPlayer', ({ room: roomName, targetId }) => {
+        const room = rooms[roomName];
+        if (!room || room.hostId !== socket.id) return;
+        if (targetId === socket.id) return; // can't kick yourself
+
+        const index = room.users.findIndex(u => u.id === targetId);
+        if (index === -1) return;
+
+        const kickedUser = room.users[index];
+        if (kickedUser.disconnectTimer) clearTimeout(kickedUser.disconnectTimer);
+        room.users.splice(index, 1);
+
+        io.to(targetId).emit('kicked');
+        io.sockets.sockets.get(targetId)?.leave(roomName);
+
+        io.to(roomName).emit('announcement', `🚪 ${kickedUser.username} was removed by the host.`);
+
+        if (room.users.length === 0) {
+            if (room.timer) clearInterval(room.timer);
+            delete rooms[roomName];
+            return;
+        }
+
+        updateRoomUsers(roomName);
+        if (room.started) checkVictoryConditions(roomName);
+    });
+
+    socket.on('transferHost', ({ room: roomName, targetId }) => {
+        const room = rooms[roomName];
+        if (!room || room.hostId !== socket.id) return;
+
+        const target = room.users.find(u => u.id === targetId && !u.disconnected);
+        if (!target) return;
+
+        room.hostId = targetId;
+        io.to(targetId).emit('isHost');
+        socket.emit('isPlayer');
+        io.to(roomName).emit('announcement', `👑 ${target.username} is now the host.`);
+        updateRoomUsers(roomName);
+    });
+
+    socket.on('restartGame', (roomName) => {
+        const room = rooms[roomName];
+        if (!room || room.hostId !== socket.id) return;
+
+        if (room.timer) clearInterval(room.timer);
+
+        room.started = false;
+        room.phase = 'lobby';
+        room.timeLeft = 0;
+        room.votes = {};
+
+        room.users.forEach(u => {
+            u.role = 'civilian';
+            u.alive = true;
+            u.votedFor = null;
+        });
+
+        io.to(roomName).emit('gameReset');
+        io.to(roomName).emit('phaseChange', { phase: 'lobby', timeLeft: 0 });
+        io.to(roomName).emit('announcement', `🔁 The host reset the game. Back to the lobby.`);
+        updateRoomUsers(roomName);
+    });
+
     socket.on('disconnect', () => {
         console.log(`❌ Disconnected Node: ${socket.id}`);
         
         for (const [roomName, room] of Object.entries(rooms)) {
-            const index = room.users.findIndex(u => u.id === socket.id);
-            if (index !== -1) {
-                const disconnectedUser = room.users[index];
-                room.users.splice(index, 1);
-                
-                io.to(roomName).emit('announcement', `🚨 ${disconnectedUser.username} abandoned operational tracking link.`);
+            const user = room.users.find(u => u.id === socket.id);
+            if (!user) continue;
 
-                if (room.users.length === 0) {
-                    clearInterval(room.timer);
-                    delete rooms[roomName];
-                    continue;
-                }
+            user.disconnected = true;
+            io.to(roomName).emit('announcement', `📡 ${user.username} lost connection — holding their seat for ${RECONNECT_GRACE_MS / 1000}s...`);
+            updateRoomUsers(roomName);
 
-                // Migrate Host Authority if creator disconnected
-                if (room.hostId === socket.id && room.users.length > 0) {
-                    room.hostId = room.users[0].id;
-                    io.to(room.hostId).emit('isHost');
-                }
-
-                updateRoomUsers(roomName);
-                checkVictoryConditions(roomName);
-            }
+            // Give them a window to reconnect before actually removing them.
+            user.disconnectTimer = setTimeout(() => {
+                finalizeDisconnect(roomName, socket.id);
+            }, RECONNECT_GRACE_MS);
         }
     });
 });
+
+function finalizeDisconnect(roomName, socketId) {
+    const room = rooms[roomName];
+    if (!room) return;
+
+    const index = room.users.findIndex(u => u.id === socketId && u.disconnected);
+    if (index === -1) return; // they reconnected in time, nothing to do
+
+    const removedUser = room.users[index];
+    room.users.splice(index, 1);
+
+    io.to(roomName).emit('announcement', `🚨 ${removedUser.username} left the game.`);
+
+    if (room.users.length === 0) {
+        if (room.timer) clearInterval(room.timer);
+        delete rooms[roomName];
+        return;
+    }
+
+    // Migrate Host Authority if creator is the one who left
+    if (room.hostId === socketId) {
+        const nextHost = room.users.find(u => !u.disconnected) || room.users[0];
+        room.hostId = nextHost.id;
+        io.to(room.hostId).emit('isHost');
+    }
+
+    updateRoomUsers(roomName);
+    checkVictoryConditions(roomName);
+}
 
 function updateRoomUsers(roomName) {
     const room = rooms[roomName];
@@ -272,10 +416,11 @@ function updateRoomUsers(roomName) {
     const publicUserManifest = room.users.map(u => ({
         id: u.id,
         username: u.username,
-        alive: u.alive
+        alive: u.alive,
+        disconnected: Boolean(u.disconnected)
     }));
 
-    io.to(roomName).emit('roomUsers', { users: publicUserManifest });
+    io.to(roomName).emit('roomUsers', { users: publicUserManifest, hostId: room.hostId });
 }
 
 function startPhaseLoop(roomName, currentPhase, durationSeconds) {

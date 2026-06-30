@@ -377,6 +377,9 @@
             <div id="timer" class="timer-badge hidden">--</div>
             <div id="news-feed" class="news-banner hidden"></div>
             <div id="game-over-banner" class="game-over-banner hidden"></div>
+            <button id="restart-btn" class="hidden" style="background-color: var(--accent-green); color: #0a0b0e; margin-bottom: 16px;">
+                🔁 Restart Game
+            </button>
 
             <button id="init-video-btn" class="hidden" style="background-color: var(--accent-blue); margin-bottom: 12px;">
                 🎥 Connect Video Feed
@@ -428,6 +431,7 @@
         const timerDisplay = document.getElementById('timer');
         const newsFeed = document.getElementById('news-feed');
         const gameOverBanner = document.getElementById('game-over-banner');
+        const restartBtn = document.getElementById('restart-btn');
         const profilePanel = document.getElementById('profile-panel');
         const statWins = document.getElementById('stat-wins');
         const statLosses = document.getElementById('stat-losses');
@@ -438,6 +442,7 @@
         const recordStatus = document.getElementById('record-status');
 
         let currentRoom = "";
+        let myUsername = "";
         let myId = null;
         let amIHost = false;
         let amIAlive = true;
@@ -445,6 +450,7 @@
         let currentPhase = "lobby";
         let lastUsers = [];
         let lastVotes = {};
+        let currentHostId = null;
 
         // Recording state — captures this player's own camera/mic only,
         // saved locally to their device. Does not record other participants.
@@ -465,6 +471,7 @@
             
             if (username && room) {
                 currentRoom = room;
+                myUsername = username;
                 socket.emit('joinRoom', { username, room });
                 
                 window.history.pushState({ panel: "lobby" }, "");
@@ -485,7 +492,70 @@
         // ---------- Socket event handlers ----------
 
         socket.on('connect', () => {
+            const wasReconnect = myId !== null;
             myId = socket.id;
+
+            // Socket.io reconnects get a brand new socket id, so if we were
+            // already in a room, re-announce ourselves so the server can
+            // match us by username and restore our seat.
+            if (wasReconnect && currentRoom && myUsername) {
+                socket.emit('joinRoom', { username: myUsername, room: currentRoom });
+            }
+        });
+
+        socket.on('disconnect', () => {
+            if (currentRoom) {
+                newsFeed.innerText = "📡 Connection lost — trying to reconnect...";
+                newsFeed.classList.remove('hidden');
+            }
+        });
+
+        socket.on('rejoined', ({ role, alive, phase }) => {
+            myRole = role;
+            amIAlive = alive;
+            currentPhase = phase;
+            newsFeed.innerText = "✅ Reconnected — you're back in the game.";
+            newsFeed.classList.remove('hidden');
+            updatePhaseBanner();
+            if (role) {
+                roleReveal.classList.remove('hidden');
+                roleCard.className = 'role-box ' + role;
+                roleCard.innerHTML = role === 'mafia'
+                    ? '🔪 MAFIA' + '<div class="role-hint">Eliminate civilians during the night. Blend in during the day.</div>'
+                    : '🛡️ CIVILIAN' + '<div class="role-hint">Find and vote out the mafia before they take over.</div>';
+            }
+        });
+
+        socket.on('joinRejected', ({ reason }) => {
+            if (reason === 'username-taken') {
+                alert(`The handle "${myUsername}" is already active in that room. Try a different handle.`);
+                lobbyScreen.classList.add('hidden');
+                profilePanel.classList.add('hidden');
+                joinScreen.classList.remove('hidden');
+                currentRoom = "";
+            }
+        });
+
+        socket.on('kicked', () => {
+            alert("You were removed from the room by the host.");
+            currentRoom = "";
+            lobbyScreen.classList.add('hidden');
+            profilePanel.classList.add('hidden');
+            joinScreen.classList.remove('hidden');
+            if (jitsiApi) {
+                jitsiApi.dispose();
+                jitsiApi = null;
+            }
+        });
+
+        socket.on('gameReset', () => {
+            myRole = null;
+            amIAlive = true;
+            currentPhase = 'lobby';
+            roleReveal.classList.add('hidden');
+            gameOverBanner.classList.add('hidden');
+            timerDisplay.classList.add('hidden');
+            updateHostControls();
         });
 
         socket.on('profileUpdate', (profile) => {
@@ -504,8 +574,9 @@
             updateHostControls();
         });
 
-        socket.on('roomUsers', ({ users }) => {
+        socket.on('roomUsers', ({ users, hostId }) => {
             lastUsers = users;
+            if (hostId) currentHostId = hostId;
             const me = users.find(u => u.id === myId);
             if (me) amIAlive = me.alive;
             renderPlayerList();
@@ -564,6 +635,11 @@
             gameOverBanner.classList.remove('hidden');
             startBtn.classList.add('hidden');
             waitMessage.classList.add('hidden');
+            updateHostControls();
+        });
+
+        restartBtn.addEventListener('click', () => {
+            socket.emit('restartGame', currentRoom);
         });
 
         // ---------- Rendering ----------
@@ -589,9 +665,7 @@
             if (currentPhase !== 'lobby') {
                 startBtn.classList.add('hidden');
                 waitMessage.classList.add('hidden');
-                return;
-            }
-            if (amIHost) {
+            } else if (amIHost) {
                 startBtn.classList.remove('hidden');
                 waitMessage.classList.add('hidden');
                 startBtn.disabled = lastUsers.length < 3;
@@ -601,6 +675,14 @@
             } else {
                 startBtn.classList.add('hidden');
                 waitMessage.classList.remove('hidden');
+            }
+
+            // Restart button should only ever be visible to the current host,
+            // and only once a game has actually ended.
+            if (!amIHost || currentPhase !== 'ended') {
+                restartBtn.classList.add('hidden');
+            } else {
+                restartBtn.classList.remove('hidden');
             }
         }
 
@@ -633,6 +715,22 @@
                     nameWrapper.appendChild(youTag);
                 }
 
+                if (user.id === currentHostId) {
+                    const hostTag = document.createElement('span');
+                    hostTag.className = 'host-tag';
+                    hostTag.innerText = 'HOST';
+                    nameWrapper.appendChild(hostTag);
+                }
+
+                if (user.disconnected) {
+                    const reconnectTag = document.createElement('span');
+                    reconnectTag.className = 'host-tag';
+                    reconnectTag.style.color = 'var(--accent-red)';
+                    reconnectTag.style.background = 'rgba(255, 51, 68, 0.12)';
+                    reconnectTag.innerText = 'RECONNECTING...';
+                    nameWrapper.appendChild(reconnectTag);
+                }
+
                 li.appendChild(nameWrapper);
 
                 const voteCount = lastVotes[user.id];
@@ -643,11 +741,59 @@
                     li.appendChild(badge);
                 }
 
+                // Host-only management controls (kick / make host) — shown for
+                // everyone except the host's own row, and not for someone
+                // already mid-disconnect (nothing useful to transfer to them).
+                if (amIHost && user.id !== myId) {
+                    const controls = document.createElement('div');
+                    controls.style.display = 'flex';
+                    controls.style.gap = '6px';
+
+                    if (!user.disconnected) {
+                        const makeHostBtn = document.createElement('button');
+                        makeHostBtn.innerText = '👑';
+                        makeHostBtn.title = 'Make host';
+                        makeHostBtn.style.width = 'auto';
+                        makeHostBtn.style.padding = '6px 10px';
+                        makeHostBtn.style.fontSize = '0.8rem';
+                        makeHostBtn.style.background = 'rgba(241, 196, 15, 0.15)';
+                        makeHostBtn.style.color = 'var(--accent-gold)';
+                        makeHostBtn.style.boxShadow = 'none';
+                        makeHostBtn.addEventListener('click', (e) => {
+                            e.stopPropagation();
+                            if (confirm(`Make ${user.username} the host?`)) {
+                                socket.emit('transferHost', { room: currentRoom, targetId: user.id });
+                            }
+                        });
+                        controls.appendChild(makeHostBtn);
+                    }
+
+                    const kickBtn = document.createElement('button');
+                    kickBtn.innerText = '🚪';
+                    kickBtn.title = 'Kick player';
+                    kickBtn.style.width = 'auto';
+                    kickBtn.style.padding = '6px 10px';
+                    kickBtn.style.fontSize = '0.8rem';
+                    kickBtn.style.background = 'rgba(255, 51, 68, 0.15)';
+                    kickBtn.style.color = 'var(--accent-red)';
+                    kickBtn.style.boxShadow = 'none';
+                    kickBtn.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        if (confirm(`Remove ${user.username} from the room?`)) {
+                            socket.emit('kickPlayer', { room: currentRoom, targetId: user.id });
+                        }
+                    });
+                    controls.appendChild(kickBtn);
+
+                    li.appendChild(controls);
+                }
+
                 const clickable = user.alive
                     && user.id !== myId
                     && amIAlive
                     && canVote
-                    && !nightRestricted;
+                    && !nightRestricted
+                    && !user.disconnected;
 
                 if (clickable) {
                     li.addEventListener('click', () => {

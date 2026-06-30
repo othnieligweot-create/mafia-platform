@@ -84,6 +84,24 @@ Each player has a **"Record My Camera & Mic"** button, and recording now **start
 
 If you later want one unified recording with everyone in it and have budget for it, switching to JaaS's native recording is the more direct path — it requires setting `recording: true` in the JWT feature flags in `server.js` (currently `false`) and registering a webhook to retrieve the file within the 24-hour window JaaS stores it for.
 
+## Host controls
+
+The host now has three additional controls beyond starting the game:
+
+- **Kick a player** — a 🚪 button next to each other player's name (visible only to the host) removes them from the room immediately, in both lobby and active-game states.
+- **Make host** — a 👑 button transfers host status to another connected player voluntarily, rather than only happening automatically when the host disconnects.
+- **Restart the game** — once a game ends, the host sees a "Restart Game" button that resets everyone back to the lobby (roles cleared, everyone alive again) without anyone needing to leave and rejoin the room.
+
+## Reconnection (lightweight, in-memory only)
+
+If a player's connection drops — phone locks, app gets backgrounded, brief network blip — their seat is held for **45 seconds** instead of being removed immediately. During that window:
+
+- Other players see a "RECONNECTING..." tag next to that player's name.
+- If they reconnect within the window (same username, same room), they're seamlessly restored: same role, same alive/dead status, same host status if they were host.
+- If they don't reconnect in time, they're removed and the game continues without them (with host migration if needed, same as before).
+
+**Important limitation:** this is purely in-memory, scoped to one running server process. It does *not* survive a full server restart — if Render restarts or redeploys your app (which can happen on the free tier after inactivity, or whenever you push new code), all active games and the reconnect state are wiped, same as before. This fix specifically helps with short-lived connection drops during an otherwise-stable server session, not full outages or redeploys. True persistence across restarts would need a real database (e.g. Redis or Postgres) — a bigger step covered in "Possible next steps."
+
 ## Deploying so others can join
 
 This needs a real Node host (not static hosting) since it runs a WebSocket server. Easy options:
@@ -96,17 +114,15 @@ Once deployed, share the URL + a room code with friends and you can all play fro
 
 ## Known limitations (worth knowing about)
 
-- **In-memory state only.** All rooms and profiles live in server RAM — restarting the server wipes everyone's stats and active games. Fine for casual play; you'd want a real database (e.g. Redis/Postgres) for anything persistent.
-- **No reconnect handling.** If a player's connection drops mid-game, they're treated as having left — they can't currently rejoin the same game session.
-- **No spectator/rejoin distinction** — a disconnect during an active game doesn't get them back into the same role.
+- **In-memory state only.** All rooms, profiles, and reconnect grace windows live in server RAM — a full server restart (Render redeploy, free-tier spin-down, crash) wipes everyone's stats and active games. Fine for casual play; you'd want a real database (e.g. Redis/Postgres) for anything persistent.
+- **Reconnect only covers short drops.** The 45-second grace window (see "Reconnection" above) helps with flaky connections or a backgrounded app, but does not survive the server itself restarting.
 - **No input sanitization** beyond basic empty-string checks — fine for friends playing casually, but don't expose this publicly without adding validation/rate-limiting if you're worried about abuse.
 - **JaaS billing/limits apply.** JaaS has a free tier (participant-minutes based) and paid tiers beyond that — check your usage against your plan in the JaaS console if you expect heavy use.
-- **Local recording is per-player, camera/mic only — not a full call recording.** See below for why.
+- **Local recording is per-player, camera/mic only — not a full call recording.** See above for why.
 - **Video tokens are 1 hour long.** If a game session runs longer than that, a player's video may need to reconnect (leaving and rejoining the call) once the token expires. This can be extended in `generateJaasToken` in `server.js` if needed.
 
 ## Possible next steps
 
 - Add Detective/Doctor roles for more classic Mafia variety
-- Persist stats to a real database
-- Add reconnect/rejoin support
+- Persist stats and room state to a real database, so reconnection survives server restarts too
 - Add a text chat panel alongside video
