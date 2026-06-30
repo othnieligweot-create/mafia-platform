@@ -1,0 +1,6 @@
+node_modules/
+.env
+*.pk
+*.pem
+*.key
+npm-debug.log

@@ -1,0 +1,838 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mafia Platform - Premium Edition</title>
+    <script src="https://8x8.vc/vpaas-magic-cookie-07a593c9625c45d5b393a330482f2d32/external_api.js"></script>
+    <style>
+        /* Modern CSS Reset & Variable Tokens */
+        :root {
+            --bg-dark: #0a0b0e;
+            --panel-bg: rgba(21, 23, 30, 0.75);
+            --border-color: rgba(255, 255, 255, 0.08);
+            --text-main: #f3f4f6;
+            --text-muted: #9ca3af;
+            --accent-red: #ff3344;
+            --accent-red-hover: #dd1122;
+            --accent-green: #00e699;
+            --accent-gold: #f1c40f;
+            --accent-blue: #00bc8c;
+        }
+
+        body { 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
+            margin: 0; 
+            padding: 16px; 
+            background: var(--bg-dark); 
+            color: var(--text-main); 
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            box-sizing: border-box;
+            transition: background 0.8s ease;
+        }
+
+        /* Fluid App Container with Glassmorphism styling */
+        .app-container { 
+            width: 100%;
+            max-width: 520px; 
+            background: var(--panel-bg); 
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 24px; 
+            border-radius: 16px; 
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5); 
+            border: 1px solid var(--border-color);
+            box-sizing: border-box;
+        }
+
+        /* Clean Minimalist Typography */
+        h1 {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-top: 0;
+            margin-bottom: 4px;
+            letter-spacing: -0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        h2 { font-size: 1.2rem; margin: 16px 0 8px; font-weight: 600; color: var(--text-main); }
+        h3 { font-size: 0.95rem; margin: 12px 0 8px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+        .version-pill {
+            font-size: 0.7rem;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 2px 8px;
+            border-radius: 20px;
+            color: var(--text-muted);
+            font-weight: 400;
+        }
+
+        /* Elegant Form Control Fields */
+        .input-group {
+            margin-bottom: 12px;
+        }
+        .input-group label {
+            display: block;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+        input { 
+            width: 100%; 
+            padding: 14px 16px; 
+            border-radius: 10px; 
+            border: 1px solid var(--border-color);
+            background: rgba(0, 0, 0, 0.2);
+            color: #fff; 
+            box-sizing: border-box; 
+            font-size: 1rem; 
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        input:focus {
+            border-color: var(--accent-red);
+            background: rgba(0, 0, 0, 0.4);
+            box-shadow: 0 0 0 3px rgba(255, 51, 68, 0.15);
+        }
+
+        /* Buttons with tactile feedback */
+        button { 
+            width: 100%; 
+            padding: 14px; 
+            border-radius: 10px; 
+            border: none; 
+            box-sizing: border-box; 
+            font-size: 1rem; 
+            font-weight: 600; 
+            cursor: pointer; 
+            background: var(--accent-red); 
+            color: white; 
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
+            box-shadow: 0 4px 12px rgba(255, 51, 68, 0.2);
+        }
+        button:hover { 
+            background: var(--accent-red-hover); 
+            transform: translateY(-1px);
+        }
+        button:active {
+            transform: translateY(1px);
+        }
+        button:disabled {
+            background: rgba(255, 255, 255, 0.08);
+            color: var(--text-muted);
+            cursor: not-allowed;
+            box-shadow: none;
+            transform: none;
+        }
+
+        .hidden { display: none !important; }
+        ul { list-style-type: none; padding: 0; margin: 0; }
+        
+        /* Profile Dashboard Badge */
+        .profile-badge { 
+            background: rgba(255, 255, 255, 0.04); 
+            padding: 12px 16px; 
+            border-radius: 10px; 
+            font-size: 0.85rem; 
+            margin-bottom: 20px; 
+            border: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .stats-row { display: flex; gap: 12px; font-weight: 600; }
+        .stat-val { color: var(--accent-green); }
+        
+        /* Immersive video theater box */
+        #video-container { 
+            width: 100%; 
+            height: 380px; 
+            background: #111214; 
+            border-radius: 12px; 
+            margin: 18px 0; 
+            overflow: hidden; 
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+        }
+
+        /* Essential layouts forced when browser enters Fullscreen Mode */
+        #video-container:fullscreen {
+            border-radius: 0 !important;
+            margin: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+        }
+        #video-container:-webkit-full-screen {
+            border-radius: 0 !important;
+            margin: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+        }
+
+        /* Picture-in-Picture Mini-Floating Frame styling */
+        .pip-mode {
+            position: fixed !important;
+            bottom: 20px;
+            right: 16px;
+            width: 140px !important;
+            height: 200px !important;
+            z-index: 9999;
+            border: 2px solid var(--accent-red) !important;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8) !important;
+            border-radius: 12px !important;
+            overflow: hidden;
+            pointer-events: auto;
+            background: #111214;
+        }
+        
+        /* Modernized Target Cards */
+        .player-card { 
+            background: rgba(255, 255, 255, 0.03); 
+            padding: 14px 16px; 
+            margin-bottom: 8px; 
+            border-radius: 10px; 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            border: 1px solid var(--border-color); 
+            cursor: pointer; 
+            transition: all 0.2s ease;
+        }
+        .player-card:hover { 
+            border-color: rgba(255, 51, 68, 0.4); 
+            background: rgba(255, 255, 255, 0.06); 
+            transform: scale(1.01);
+        }
+        .player-card.voted-by-me {
+            border-color: var(--accent-gold);
+            background: rgba(241, 196, 15, 0.08);
+        }
+        .player-card .name-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+        .host-tag {
+            font-size: 0.7rem;
+            background: rgba(241, 196, 15, 0.15);
+            color: var(--accent-gold);
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+        .you-tag {
+            font-size: 0.7rem;
+            background: rgba(0, 188, 140, 0.15);
+            color: var(--accent-blue);
+            padding: 2px 8px;
+            border-radius: 20px;
+        }
+        .dead { 
+            background: rgba(0, 0, 0, 0.2) !important; 
+            opacity: 0.3; 
+            border-color: transparent !important; 
+            cursor: not-allowed !important; 
+            text-decoration: line-through; 
+            color: var(--text-muted); 
+        }
+        .dead:hover { transform: none; }
+
+        .vote-badge { 
+            background: var(--accent-red); 
+            padding: 4px 10px; 
+            border-radius: 20px; 
+            font-size: 0.75rem; 
+            font-weight: 700; 
+            box-shadow: 0 2px 6px rgba(255, 51, 68, 0.3);
+        }
+        
+        /* Dynamic Status & Phase Banners */
+        .status-banner { 
+            padding: 14px; 
+            font-weight: 700; 
+            text-align: center; 
+            font-size: 1.1rem; 
+            border-radius: 10px; 
+            margin-bottom: 16px; 
+            letter-spacing: 0.5px;
+            border: 1px solid transparent;
+        }
+        .night-theme { 
+            background: rgba(255, 0, 85, 0.06); 
+            border-color: rgba(255, 0, 85, 0.3); 
+            color: #ff3377; 
+            box-shadow: 0 0 15px rgba(255,0,85,0.1); 
+        }
+        .day-theme { 
+            background: rgba(243, 156, 18, 0.08); 
+            border-color: rgba(243, 156, 18, 0.3); 
+            color: #f39c12; 
+        }
+        .lobby-theme {
+            background: rgba(255, 255, 255, 0.04);
+            border-color: var(--border-color);
+            color: var(--text-muted);
+        }
+        .ended-theme {
+            background: rgba(0, 230, 153, 0.08);
+            border-color: rgba(0, 230, 153, 0.3);
+            color: var(--accent-green);
+        }
+
+        .news-banner { 
+            background: rgba(255, 255, 255, 0.03); 
+            border-left: 4px solid var(--accent-red); 
+            padding: 14px; 
+            margin: 16px 0; 
+            font-size: 0.9rem;
+            line-height: 1.4;
+            color: #e5e7eb;
+            border-radius: 0 10px 10px 0; 
+        }
+        
+        /* Secret Role View Card */
+        .role-box { 
+            padding: 16px; 
+            margin-top: 12px; 
+            border-radius: 10px; 
+            font-weight: 800; 
+            text-align: center; 
+            font-size: 1.3rem; 
+            letter-spacing: 1px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5); 
+            border: 1px solid transparent;
+        }
+        .mafia { background: rgba(128, 12, 18, 0.6); border-color: rgba(255, 30, 39, 0.4); color: #ff4d54; }
+        .civilian { background: rgba(19, 95, 56, 0.5); border-color: rgba(30, 215, 96, 0.4); color: #2ecc71; }
+
+        .role-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 8px;
+            font-weight: 400;
+            letter-spacing: normal;
+            text-shadow: none;
+        }
+        
+        .timer-badge { 
+            font-size: 2.8rem; 
+            text-align: center; 
+            font-weight: 800; 
+            margin: 12px 0; 
+            color: var(--accent-gold); 
+            font-variant-numeric: tabular-nums;
+            text-shadow: 0 2px 10px rgba(241, 196, 15, 0.2);
+        }
+
+        .game-over-banner {
+            text-align: center;
+            font-size: 1.1rem;
+            font-weight: 700;
+            padding: 16px;
+            border-radius: 10px;
+            background: rgba(0, 230, 153, 0.08);
+            border: 1px solid rgba(0, 230, 153, 0.3);
+            color: var(--accent-green);
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="app-container">
+        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
+            <h1>🕵️‍♂️ Mafia Platform <span class="version-pill">v4.0</span></h1>
+        </header>
+        
+        <div id="profile-panel" class="profile-badge hidden">
+            <span>📊 Profile Identity</span>
+            <div class="stats-row">
+                <div>W: <span id="stat-wins" class="stat-val">0</span></div>
+                <div>L: <span id="stat-losses" style="color:var(--accent-red);">0</span></div>
+                <div>Total: <span id="stat-total" style="color:var(--accent-gold);">0</span></div>
+            </div>
+        </div>
+
+        <div id="join-screen">
+            <div class="input-group">
+                <label for="username">Player Handle</label>
+                <input type="text" id="username" placeholder="e.g., Operative" maxlength="20" required>
+            </div>
+            <div class="input-group">
+                <label for="room-id">Secure Room ID</label>
+                <input type="text" id="room-id" placeholder="e.g., AlphaCode" maxlength="20" required>
+            </div>
+            <button id="join-btn" style="margin-top: 10px;">Establish Connection</button>
+        </div>
+
+        <div id="lobby-screen" class="hidden">
+            <div id="phase-banner" class="status-banner lobby-theme">Lobby Waiting</div>
+            <div id="timer" class="timer-badge hidden">--</div>
+            <div id="news-feed" class="news-banner hidden"></div>
+            <div id="game-over-banner" class="game-over-banner hidden"></div>
+
+            <button id="init-video-btn" class="hidden" style="background-color: var(--accent-blue); margin-bottom: 12px;">
+                🎥 Connect Video Feed
+            </button>
+            <div id="video-container" class="hidden"></div>
+
+            <div style="display:flex; justify-content:space-between; align-items:center; margin: 20px 0 10px;">
+                <h2 style="margin:0;">Room: <span id="display-room" style="color:var(--accent-red);"></span></h2>
+            </div>
+
+            <div id="role-reveal" class="hidden">
+                <h3>Tactical Clearance Assigned:</h3>
+                <div id="role-card" class="role-box"></div>
+            </div>
+            
+            <h3 style="margin-top:20px;">Target Control Board (Tap to Vote):</h3>
+            <ul id="player-list"></ul>
+            
+            <div style="margin-top: 20px;">
+                <button id="start-btn" class="hidden">Launch Operations</button>
+                <p id="wait-message" class="hidden" style="color: var(--text-muted); text-align:center; font-size:0.9rem; font-style:italic; margin:0;">
+                    Awaiting authorization from Room Host...
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        let jitsiApi = null;
+
+        const joinScreen = document.getElementById('join-screen');
+        const lobbyScreen = document.getElementById('lobby-screen');
+        const joinBtn = document.getElementById('join-btn');
+        const startBtn = document.getElementById('start-btn');
+        const waitMessage = document.getElementById('wait-message');
+        const usernameInput = document.getElementById('username');
+        const roomIdInput = document.getElementById('room-id');
+        const displayRoom = document.getElementById('display-room');
+        const playerList = document.getElementById('player-list');
+        const roleReveal = document.getElementById('role-reveal');
+        const roleCard = document.getElementById('role-card');
+        const phaseBanner = document.getElementById('phase-banner');
+        const timerDisplay = document.getElementById('timer');
+        const newsFeed = document.getElementById('news-feed');
+        const gameOverBanner = document.getElementById('game-over-banner');
+        const profilePanel = document.getElementById('profile-panel');
+        const statWins = document.getElementById('stat-wins');
+        const statLosses = document.getElementById('stat-losses');
+        const statTotal = document.getElementById('stat-total');
+        const videoContainer = document.getElementById('video-container');
+        const initVideoBtn = document.getElementById('init-video-btn');
+
+        let currentRoom = "";
+        let myId = null;
+        let amIHost = false;
+        let amIAlive = true;
+        let myRole = null; // null until assigned
+        let currentPhase = "lobby";
+        let lastUsers = [];
+        let lastVotes = {};
+
+        // ---------- Joining ----------
+
+        joinBtn.addEventListener('click', attemptJoin);
+        usernameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') attemptJoin(); });
+        roomIdInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') attemptJoin(); });
+
+        function attemptJoin() {
+            const username = usernameInput.value ? usernameInput.value.trim() : "";
+            const room = roomIdInput.value ? roomIdInput.value.trim() : "";
+            
+            if (username && room) {
+                currentRoom = room;
+                socket.emit('joinRoom', { username, room });
+                
+                window.history.pushState({ panel: "lobby" }, "");
+                showLobbyUI();
+            } else {
+                alert("Please enter both a Player Handle and a Secure Room ID.");
+            }
+        }
+
+        function showLobbyUI() {
+            joinScreen.classList.add('hidden');
+            lobbyScreen.classList.remove('hidden');
+            profilePanel.classList.remove('hidden');
+            displayRoom.innerText = currentRoom;
+            initVideoBtn.classList.remove('hidden');
+        }
+
+        // ---------- Socket event handlers ----------
+
+        socket.on('connect', () => {
+            myId = socket.id;
+        });
+
+        socket.on('profileUpdate', (profile) => {
+            statWins.innerText = profile.wins;
+            statLosses.innerText = profile.losses;
+            statTotal.innerText = profile.gamesPlayed;
+        });
+
+        socket.on('isHost', () => {
+            amIHost = true;
+            updateHostControls();
+        });
+
+        socket.on('isPlayer', () => {
+            amIHost = false;
+            updateHostControls();
+        });
+
+        socket.on('roomUsers', ({ users }) => {
+            lastUsers = users;
+            const me = users.find(u => u.id === myId);
+            if (me) amIAlive = me.alive;
+            renderPlayerList();
+            updateHostControls();
+        });
+
+        socket.on('assignRole', (role) => {
+            myRole = role;
+            roleReveal.classList.remove('hidden');
+            roleCard.className = 'role-box ' + role;
+            if (role === 'mafia') {
+                roleCard.innerHTML = '🔪 MAFIA' + '<div class="role-hint">Eliminate civilians during the night. Blend in during the day.</div>';
+            } else {
+                roleCard.innerHTML = '🛡️ CIVILIAN' + '<div class="role-hint">Find and vote out the mafia before they take over.</div>';
+            }
+        });
+
+        socket.on('gameStarted', () => {
+            startBtn.classList.add('hidden');
+            waitMessage.classList.add('hidden');
+            gameOverBanner.classList.add('hidden');
+        });
+
+        socket.on('phaseChange', ({ phase, timeLeft }) => {
+            currentPhase = phase;
+            lastVotes = {};
+            updatePhaseBanner();
+            timerDisplay.classList.remove('hidden');
+            timerDisplay.innerText = timeLeft;
+            renderPlayerList();
+        });
+
+        socket.on('timerUpdate', (timeLeft) => {
+            timerDisplay.innerText = timeLeft;
+        });
+
+        socket.on('voteUpdate', (votes) => {
+            lastVotes = votes;
+            renderPlayerList();
+        });
+
+        socket.on('announcement', (msg) => {
+            newsFeed.innerText = msg;
+            newsFeed.classList.remove('hidden');
+        });
+
+        socket.on('eliminated', () => {
+            amIAlive = false;
+        });
+
+        socket.on('gameOver', (msg) => {
+            currentPhase = 'ended';
+            updatePhaseBanner();
+            timerDisplay.classList.add('hidden');
+            gameOverBanner.innerText = msg;
+            gameOverBanner.classList.remove('hidden');
+            startBtn.classList.add('hidden');
+            waitMessage.classList.add('hidden');
+        });
+
+        // ---------- Rendering ----------
+
+        function updatePhaseBanner() {
+            phaseBanner.classList.remove('night-theme', 'day-theme', 'lobby-theme', 'ended-theme');
+            if (currentPhase === 'night') {
+                phaseBanner.classList.add('night-theme');
+                phaseBanner.innerText = '🌙 Night Phase — Mafia is choosing a target';
+            } else if (currentPhase === 'day') {
+                phaseBanner.classList.add('day-theme');
+                phaseBanner.innerText = '☀️ Day Phase — Discuss and vote';
+            } else if (currentPhase === 'ended') {
+                phaseBanner.classList.add('ended-theme');
+                phaseBanner.innerText = '🏁 Game Over';
+            } else {
+                phaseBanner.classList.add('lobby-theme');
+                phaseBanner.innerText = 'Lobby Waiting';
+            }
+        }
+
+        function updateHostControls() {
+            if (currentPhase !== 'lobby') {
+                startBtn.classList.add('hidden');
+                waitMessage.classList.add('hidden');
+                return;
+            }
+            if (amIHost) {
+                startBtn.classList.remove('hidden');
+                waitMessage.classList.add('hidden');
+                startBtn.disabled = lastUsers.length < 3;
+                startBtn.innerText = lastUsers.length < 3
+                    ? `Need ${3 - lastUsers.length} more operative(s)`
+                    : 'Launch Operations';
+            } else {
+                startBtn.classList.add('hidden');
+                waitMessage.classList.remove('hidden');
+            }
+        }
+
+        function renderPlayerList() {
+            playerList.innerHTML = '';
+
+            // Determine who I'm allowed to vote for
+            const canVote = currentPhase === 'night' || currentPhase === 'day';
+            const nightRestricted = currentPhase === 'night' && myRole !== 'mafia';
+
+            lastUsers.forEach(user => {
+                const li = document.createElement('li');
+                li.className = 'player-card';
+                if (!user.alive) li.classList.add('dead');
+
+                const myCurrentTarget = getMyVoteTarget();
+                if (myCurrentTarget === user.id) li.classList.add('voted-by-me');
+
+                const nameWrapper = document.createElement('div');
+                nameWrapper.className = 'name-wrapper';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.innerText = user.username;
+                nameWrapper.appendChild(nameSpan);
+
+                if (user.id === myId) {
+                    const youTag = document.createElement('span');
+                    youTag.className = 'you-tag';
+                    youTag.innerText = 'YOU';
+                    nameWrapper.appendChild(youTag);
+                }
+
+                li.appendChild(nameWrapper);
+
+                const voteCount = lastVotes[user.id];
+                if (voteCount && voteCount > 0) {
+                    const badge = document.createElement('span');
+                    badge.className = 'vote-badge';
+                    badge.innerText = voteCount;
+                    li.appendChild(badge);
+                }
+
+                const clickable = user.alive
+                    && user.id !== myId
+                    && amIAlive
+                    && canVote
+                    && !nightRestricted;
+
+                if (clickable) {
+                    li.addEventListener('click', () => {
+                        socket.emit('castVote', { room: currentRoom, targetId: user.id });
+                    });
+                } else {
+                    li.style.cursor = 'default';
+                }
+
+                playerList.appendChild(li);
+            });
+        }
+
+        function getMyVoteTarget() {
+            // We don't get our own votedFor back from the server directly,
+            // but we can infer it isn't needed for display beyond vote counts.
+            // Kept for potential future use / highlighting.
+            return null;
+        }
+
+        // ---------- Host: start game ----------
+
+        startBtn.addEventListener('click', () => {
+            socket.emit('startGame', currentRoom);
+        });
+
+        // ---------- Video (Jitsi) ----------
+
+        initVideoBtn.addEventListener('click', async function() {
+            try {
+                if (jitsiApi) {
+                    videoContainer.classList.remove('pip-mode');
+                    showLobbyUI();
+                    window.history.pushState({ panel: "lobby" }, "");
+                    this.classList.add('hidden');
+                    goFullscreenAndLandscape();
+                    return;
+                }
+                
+                await initVideoConference();
+                window.history.pushState({ panel: "lobby" }, "");
+                if (jitsiApi) {
+                    this.classList.add('hidden');
+                    goFullscreenAndLandscape();
+                }
+            } catch (e) {
+                console.error("Jitsi framework initialization failure:", e);
+            }
+        });
+
+        function goFullscreenAndLandscape() {
+            const reqFullscreen = videoContainer.requestFullscreen || 
+                                  videoContainer.webkitRequestFullscreen || 
+                                  videoContainer.msRequestFullscreen;
+            
+            if (reqFullscreen) {
+                reqFullscreen.call(videoContainer).then(() => {
+                    if (screen.orientation && screen.orientation.lock) {
+                        screen.orientation.lock('landscape').catch((err) => {
+                            console.warn("Screen orientation lock declined by system restrictions:", err);
+                        });
+                    }
+                }).catch((err) => {
+                    console.error("Fullscreen request blocked:", err);
+                });
+            }
+        }
+
+        document.addEventListener('fullscreenchange', () => {
+            if (!document.fullscreenElement && jitsiApi && !videoContainer.classList.contains('pip-mode')) {
+                videoContainer.classList.add('pip-mode');
+                initVideoBtn.innerText = "🔍 Expand Floating Video Feed";
+                initVideoBtn.classList.remove('hidden');
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+            }
+        });
+        document.addEventListener('webkitfullscreenchange', () => {
+            if (!document.webkitIsFullScreen && jitsiApi && !videoContainer.classList.contains('pip-mode')) {
+                videoContainer.classList.add('pip-mode');
+                initVideoBtn.innerText = "🔍 Expand Floating Video Feed";
+                initVideoBtn.classList.remove('hidden');
+                if (screen.orientation && screen.orientation.unlock) {
+                    screen.orientation.unlock();
+                }
+            }
+        });
+
+        window.addEventListener('popstate', (event) => {
+            if (!event.state || event.state.panel !== "lobby") {
+                lobbyScreen.classList.add('hidden');
+                profilePanel.classList.add('hidden');
+                joinScreen.classList.remove('hidden');
+                
+                if (document.exitFullscreen) { document.exitFullscreen(); }
+                else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
+                
+                if (jitsiApi) {
+                    videoContainer.classList.remove('hidden');
+                    videoContainer.classList.add('pip-mode');
+                    
+                    initVideoBtn.innerText = "🔍 Expand Floating Video Feed";
+                    initVideoBtn.classList.remove('hidden');
+                }
+            }
+        });
+
+        async function initVideoConference() {
+            if (typeof JitsiMeetExternalAPI === 'undefined') {
+                console.error("Jitsi Script external dependency could not be reached.");
+                newsFeed.innerText = "⚠️ Video network unreachable. Game tracking operational via text links.";
+                newsFeed.classList.remove('hidden');
+                return;
+            }
+
+            const username = usernameInput.value ? usernameInput.value.trim() : "Operative";
+
+            let tokenData;
+            try {
+                const response = await fetch('/api/video-token', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: username,
+                        room: currentRoom,
+                        isModerator: amIHost
+                    })
+                });
+
+                if (!response.ok) {
+                    const errBody = await response.json().catch(() => ({}));
+                    throw new Error(errBody.error || `Server returned ${response.status}`);
+                }
+
+                tokenData = await response.json();
+            } catch (err) {
+                console.error("Failed to fetch JaaS video token:", err);
+                newsFeed.innerText = "⚠️ Couldn't start video — server didn't issue a video token. Check JaaS configuration.";
+                newsFeed.classList.remove('hidden');
+                return;
+            }
+
+            videoContainer.classList.remove('hidden');
+            const domain = "8x8.vc";
+            const options = {
+                roomName: tokenData.roomName,
+                jwt: tokenData.token,
+                width: "100%",
+                height: "100%",
+                parentNode: videoContainer,
+                userInfo: {
+                    displayName: username
+                },
+                configOverwrite: {
+                    startWithAudioMuted: false,
+                    startWithVideoMuted: false,
+                    prejoinPageEnabled: false,
+                    disableDeepLinking: true,
+                    startAudioOnly: false,
+                    channelLastN: 20,
+                    tileViewEnabled: true,
+                    disableSelfView: false,
+                    desktopSharingFrameRate: { min: 5, max: 15 }
+                },
+                interfaceConfigOverwrite: {
+                    TOOLBAR_BUTTONS: [
+                        'microphone', 'camera', 'closedcaptions', 'desktop',
+                        'fullscreen', 'fodeviceselection', 'hangup', 'chat',
+                        'settings', 'raisehand', 'tileview'
+                    ],
+                    SHOW_JITSI_WATERMARK: false,
+                    SHOW_WATERMARK_FOR_GUESTS: false
+                }
+            };
+
+            jitsiApi = new JitsiMeetExternalAPI(domain, options);
+
+            jitsiApi.addEventListener('videoConferenceLeft', () => {
+                videoContainer.classList.add('hidden');
+                videoContainer.classList.remove('pip-mode');
+                initVideoBtn.innerText = "🎥 Connect Video Feed";
+                initVideoBtn.classList.remove('hidden');
+                jitsiApi.dispose();
+                jitsiApi = null;
+            });
+
+            jitsiApi.addEventListener('readyToClose', () => {
+                videoContainer.classList.add('hidden');
+                videoContainer.classList.remove('pip-mode');
+                initVideoBtn.innerText = "🎥 Connect Video Feed";
+                initVideoBtn.classList.remove('hidden');
+                if (jitsiApi) {
+                    jitsiApi.dispose();
+                    jitsiApi = null;
+                }
+            });
+        }
+    </script>
+</body>
+</html>
