@@ -72,6 +72,18 @@ If these aren't set, the "Connect Video Feed" button will fail gracefully with a
 
 The fullscreen/landscape lock and picture-in-picture docking behavior on mobile work exactly as before.
 
+## Recording (local, per-player, free)
+
+Each player has a **"Record My Camera & Mic"** button that appears once they've joined the video call. This is intentionally free and uses no paid service, but it comes with real limitations worth understanding before relying on it:
+
+- **It records that player's own camera and microphone only** — not the other participants' video, not a composited "everyone in one recording" view. Each player who wants footage needs to tap record themselves and keep their own file.
+- **Why not a full call recording?** The obvious approach — recording the whole screen/tab showing everyone — uses a browser API called `getDisplayMedia`. That API is not implemented on Android Chrome or Firefox for Android (it exists in the code but always rejects), so it silently fails on the exact phones most players will likely use. Recording each player's own camera via `getUserMedia` is the option that actually works on mobile.
+- **JaaS's own server-side recording** would solve the "one recording with everyone in it" problem properly, but costs $0.01/minute, billed to your JaaS account — there's no way around that cost if you want true full-call recording.
+- **Camera conflicts.** Most phones only let one app/tab use the camera at a time. Starting a recording while the video call is also using the camera may briefly interrupt one or the other, or fail with a "camera busy" error. If that happens, try again, or pause/leave the video call before recording.
+- Recordings save as `.webm` files directly to the player's own device — nothing is uploaded to your server or to JaaS.
+
+If you later want one unified recording with everyone in it and have budget for it, switching to JaaS's native recording is the more direct path — it requires setting `recording: true` in the JWT feature flags in `server.js` (currently `false`) and registering a webhook to retrieve the file within the 24-hour window JaaS stores it for.
+
 ## Deploying so others can join
 
 This needs a real Node host (not static hosting) since it runs a WebSocket server. Easy options:
@@ -89,6 +101,7 @@ Once deployed, share the URL + a room code with friends and you can all play fro
 - **No spectator/rejoin distinction** — a disconnect during an active game doesn't get them back into the same role.
 - **No input sanitization** beyond basic empty-string checks — fine for friends playing casually, but don't expose this publicly without adding validation/rate-limiting if you're worried about abuse.
 - **JaaS billing/limits apply.** JaaS has a free tier (participant-minutes based) and paid tiers beyond that — check your usage against your plan in the JaaS console if you expect heavy use.
+- **Local recording is per-player, camera/mic only — not a full call recording.** See below for why.
 - **Video tokens are 1 hour long.** If a game session runs longer than that, a player's video may need to reconnect (leaving and rejoining the call) once the token expires. This can be extended in `generateJaasToken` in `server.js` if needed.
 
 ## Possible next steps

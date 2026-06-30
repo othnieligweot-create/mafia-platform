@@ -382,6 +382,10 @@
                 🎥 Connect Video Feed
             </button>
             <div id="video-container" class="hidden"></div>
+            <button id="record-btn" class="hidden" style="background-color: var(--accent-gold); color: #1a1a1a; margin-bottom: 8px;">
+                ⏺️ Record My Camera & Mic
+            </button>
+            <p id="record-status" class="hidden" style="color: var(--text-muted); text-align:center; font-size:0.85rem; margin: -4px 0 12px;"></p>
 
             <div style="display:flex; justify-content:space-between; align-items:center; margin: 20px 0 10px;">
                 <h2 style="margin:0;">Room: <span id="display-room" style="color:var(--accent-red);"></span></h2>
@@ -430,6 +434,8 @@
         const statTotal = document.getElementById('stat-total');
         const videoContainer = document.getElementById('video-container');
         const initVideoBtn = document.getElementById('init-video-btn');
+        const recordBtn = document.getElementById('record-btn');
+        const recordStatus = document.getElementById('record-status');
 
         let currentRoom = "";
         let myId = null;
@@ -439,6 +445,13 @@
         let currentPhase = "lobby";
         let lastUsers = [];
         let lastVotes = {};
+
+        // Recording state — captures this player's own camera/mic only,
+        // saved locally to their device. Does not record other participants.
+        let mediaRecorder = null;
+        let recordedChunks = [];
+        let isRecording = false;
+        let recordingStream = null;
 
         // ---------- Joining ----------
 
@@ -823,11 +836,17 @@
 
             jitsiApi = new JitsiMeetExternalAPI(domain, options);
 
+            jitsiApi.addEventListener('videoConferenceJoined', () => {
+                recordBtn.classList.remove('hidden');
+            });
+
             jitsiApi.addEventListener('videoConferenceLeft', () => {
                 videoContainer.classList.add('hidden');
                 videoContainer.classList.remove('pip-mode');
                 initVideoBtn.innerText = "🎥 Connect Video Feed";
                 initVideoBtn.classList.remove('hidden');
+                stopRecording();
+                recordBtn.classList.add('hidden');
                 jitsiApi.dispose();
                 jitsiApi = null;
             });
@@ -837,11 +856,119 @@
                 videoContainer.classList.remove('pip-mode');
                 initVideoBtn.innerText = "🎥 Connect Video Feed";
                 initVideoBtn.classList.remove('hidden');
+                stopRecording();
+                recordBtn.classList.add('hidden');
                 if (jitsiApi) {
                     jitsiApi.dispose();
                     jitsiApi = null;
                 }
             });
+        }
+
+        // ---------- Local recording (each player records THEIR OWN camera & mic) ----------
+        //
+        // This does not record the full call or other participants — it opens this
+        // player's own camera/mic directly and saves the result to their device when
+        // they stop. Nothing is uploaded anywhere. Works on mobile (unlike tab/screen
+        // recording, which Android Chrome does not support).
+        //
+        // Note: most phones only allow one app/tab to use the camera at a time, so this
+        // may briefly interrupt or compete with the camera Jitsi is already using.
+
+        recordBtn.addEventListener('click', () => {
+            if (!isRecording) {
+                startRecording();
+            } else {
+                stopRecording();
+            }
+        });
+
+        async function startRecording() {
+            if (isRecording) return;
+
+            try {
+                recordingStream = await navigator.mediaDevices.getUserMedia({
+                    video: { facingMode: "user" },
+                    audio: true
+                });
+
+                recordedChunks = [];
+                const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
+                    ? 'video/webm;codecs=vp9,opus'
+                    : (MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : '');
+
+                mediaRecorder = mimeType
+                    ? new MediaRecorder(recordingStream, { mimeType })
+                    : new MediaRecorder(recordingStream);
+
+                mediaRecorder.ondataavailable = (e) => {
+                    if (e.data && e.data.size > 0) recordedChunks.push(e.data);
+                };
+
+                mediaRecorder.onstop = () => {
+                    saveRecording();
+                    if (recordingStream) {
+                        recordingStream.getTracks().forEach(track => track.stop());
+                        recordingStream = null;
+                    }
+                };
+
+                mediaRecorder.start();
+                isRecording = true;
+                recordBtn.innerText = "⏹️ Stop & Save My Recording";
+                recordBtn.style.backgroundColor = "var(--accent-red)";
+                recordBtn.style.color = "white";
+                recordStatus.innerText = "🔴 Recording your camera & mic locally — this captures only your own feed, not the full call. Stop anytime to save.";
+                recordStatus.classList.remove('hidden');
+            } catch (err) {
+                console.error("Recording failed to start:", err);
+                let msg = "Couldn't start recording.";
+                if (err.name === 'NotAllowedError') {
+                    msg = "Camera/mic permission denied. Allow access in your browser settings to record.";
+                } else if (err.name === 'NotReadableError') {
+                    msg = "Camera is busy (likely in use by the video call). Try again, or stop the video call first.";
+                } else if (err.message) {
+                    msg = err.message;
+                }
+                recordStatus.innerText = "⚠️ " + msg;
+                recordStatus.classList.remove('hidden');
+            }
+        }
+
+        function stopRecording() {
+            if (!isRecording || !mediaRecorder) return;
+            isRecording = false;
+            recordBtn.innerText = "⏺️ Record My Camera & Mic";
+            recordBtn.style.backgroundColor = "var(--accent-gold)";
+            recordBtn.style.color = "#1a1a1a";
+            recordStatus.innerText = "💾 Saving your recording...";
+            try {
+                mediaRecorder.stop();
+            } catch (err) {
+                console.error("Error stopping recorder:", err);
+            }
+        }
+
+        function saveRecording() {
+            if (recordedChunks.length === 0) {
+                recordStatus.innerText = "⚠️ No recording data captured.";
+                return;
+            }
+
+            const blob = new Blob(recordedChunks, { type: 'video/webm' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
+            a.href = url;
+            a.download = `mafia-${currentRoom || 'game'}-${timestamp}.webm`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+
+            setTimeout(() => URL.revokeObjectURL(url), 5000);
+
+            recordStatus.innerText = "✅ Saved to your device's downloads (your camera/mic only, not the full call).";
+            recordedChunks = [];
         }
     </script>
 </body>
