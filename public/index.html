@@ -5,29 +5,44 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
     <title>Mafia</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
     <script src="https://8x8.vc/vpaas-magic-cookie-07a593c9625c45d5b393a330482f2d32/external_api.js"></script>
     <style>
         *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
 
         :root {
-            --bg:        #08090C;
-            --surface:   #13141A;
-            --elevated:  #1E2028;
-            --border:    rgba(255,255,255,0.07);
-            --text:      #E8E9F0;
-            --muted:     #6B7080;
-            --accent:    #C9F0FF;
-            --accent-dim: rgba(201,240,255,0.12);
-            --accent-glow: rgba(201,240,255,0.25);
-            --red:       #FF4458;
-            --red-dim:   rgba(255,68,88,0.12);
-            --gold:      #F5C842;
-            --gold-dim:  rgba(245,200,66,0.12);
-            --green:     #3EFFA8;
-            --green-dim: rgba(62,255,168,0.12);
-            --radius:    14px;
-            --radius-sm: 8px;
+            --bg:          #06070B;
+            --bg-soft:     #0A0C12;
+            --surface:     #12141C;
+            --elevated:    #1B1E2A;
+            --border:      rgba(255,255,255,0.08);
+            --border-soft: rgba(255,255,255,0.05);
+            --text:        #F3F4F8;
+            --muted:       #767C8F;
+            --muted-dim:   #4E5266;
+            --accent:      #6FE3FF;
+            --accent-dim:  rgba(111,227,255,0.12);
+            --accent-glow: rgba(111,227,255,0.35);
+            --red:         #FF3B5C;
+            --red-dim:     rgba(255,59,92,0.12);
+            --red-glow:    rgba(255,59,92,0.35);
+            --gold:        #FFC24B;
+            --gold-dim:    rgba(255,194,75,0.12);
+            --green:       #33FFB0;
+            --green-dim:   rgba(51,255,176,0.12);
+            --green-glow:  rgba(51,255,176,0.35);
+            --radius:      20px;
+            --radius-sm:   12px;
+            --radius-lg:   28px;
+            --ease:        cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: 0.001ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.001ms !important;
+            }
         }
 
         html, body {
@@ -39,18 +54,41 @@
             overflow: hidden;
         }
 
+        /* Ambient atmosphere layer — sits behind everything, never intercepts input */
+        body::before {
+            content: '';
+            position: fixed;
+            inset: 0;
+            z-index: 0;
+            pointer-events: none;
+            background:
+                radial-gradient(ellipse 900px 600px at 15% -10%, rgba(111,227,255,0.10), transparent 60%),
+                radial-gradient(ellipse 700px 500px at 110% 20%, rgba(255,59,92,0.07), transparent 55%),
+                radial-gradient(ellipse 600px 500px at 50% 120%, rgba(51,255,176,0.05), transparent 55%);
+            animation: ambientDrift 22s ease-in-out infinite alternate;
+        }
+
+        @keyframes ambientDrift {
+            0%   { opacity: 0.7; transform: translateY(0) scale(1); }
+            100% { opacity: 1;   transform: translateY(-12px) scale(1.03); }
+        }
+
+        /* Generic visibility utility — used across many non-.screen elements */
+        .hidden { display: none !important; }
+
         /* ─── SCREENS ─── */
         .screen {
             position: fixed;
             inset: 0;
+            z-index: 1;
             display: flex;
             flex-direction: column;
-            transition: opacity 0.3s ease, transform 0.3s ease;
+            transition: opacity 0.45s var(--ease), transform 0.45s var(--ease);
         }
         .screen.hidden {
             opacity: 0;
             pointer-events: none;
-            transform: translateY(12px);
+            transform: translateY(16px) scale(0.99);
         }
 
         /* ─── JOIN SCREEN ─── */
@@ -67,63 +105,100 @@
             display: flex;
             flex-direction: column;
             gap: 0;
+            animation: joinRise 0.6s var(--ease) both;
         }
 
+        @keyframes joinRise {
+            from { opacity: 0; transform: translateY(18px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .join-mark {
+            width: 52px;
+            height: 52px;
+            border-radius: 16px;
+            background: linear-gradient(155deg, var(--elevated), var(--surface));
+            border: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 24px;
+            box-shadow: 0 0 0 1px var(--border-soft), 0 12px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.06);
+            position: relative;
+        }
+        .join-mark::after {
+            content: '';
+            position: absolute;
+            inset: -1px;
+            border-radius: 17px;
+            padding: 1px;
+            background: conic-gradient(from 0deg, var(--accent), transparent 30%, var(--red) 55%, transparent 80%, var(--accent));
+            -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+            -webkit-mask-composite: xor;
+            mask-composite: exclude;
+            opacity: 0.5;
+            animation: markSpin 6s linear infinite;
+        }
+        @keyframes markSpin { to { transform: rotate(360deg); } }
+
+        .join-mark svg { width: 26px; height: 26px; position: relative; z-index: 1; }
+
         .join-title {
-            font-size: 2.6rem;
+            font-family: 'Space Grotesk', 'DM Sans', sans-serif;
+            font-size: 2.7rem;
             font-weight: 700;
             letter-spacing: -1.5px;
             line-height: 1;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
             color: var(--text);
         }
 
-        .join-title span {
-            color: var(--accent);
-        }
+        .join-title span { color: var(--accent); }
 
         .join-sub {
-            font-size: 0.9rem;
+            font-size: 0.92rem;
             color: var(--muted);
-            margin-bottom: 40px;
+            margin-bottom: 36px;
             font-weight: 400;
         }
 
         .field {
             display: flex;
             flex-direction: column;
-            gap: 7px;
+            gap: 8px;
             margin-bottom: 14px;
         }
 
         .field label {
-            font-size: 0.75rem;
+            font-size: 0.72rem;
             font-weight: 600;
             color: var(--muted);
             text-transform: uppercase;
-            letter-spacing: 0.8px;
+            letter-spacing: 1px;
         }
 
         .field input {
-            background: var(--elevated);
+            background: var(--surface);
             border: 1.5px solid var(--border);
             border-radius: var(--radius-sm);
             color: var(--text);
-            font-family: inherit;
-            font-size: 1rem;
+            font-family: 'DM Mono', monospace;
+            font-size: 1.05rem;
             font-weight: 500;
-            padding: 14px 16px;
+            letter-spacing: 1.5px;
+            padding: 16px 18px;
             outline: none;
-            transition: border-color 0.2s, box-shadow 0.2s;
+            transition: border-color 0.2s var(--ease), box-shadow 0.2s var(--ease), background 0.2s;
             width: 100%;
         }
 
         .field input:focus {
             border-color: var(--accent);
-            box-shadow: 0 0 0 3px var(--accent-dim);
+            background: var(--elevated);
+            box-shadow: 0 0 0 4px var(--accent-dim), 0 0 24px var(--accent-glow);
         }
 
-        .field input::placeholder { color: var(--muted); }
+        .field input::placeholder { color: var(--muted-dim); letter-spacing: 0.5px; font-family: 'DM Sans', sans-serif; }
 
         .btn {
             border: none;
@@ -132,33 +207,40 @@
             font-family: inherit;
             font-size: 0.95rem;
             font-weight: 600;
-            padding: 15px 20px;
-            transition: all 0.18s ease;
+            padding: 16px 20px;
+            transition: transform 0.15s var(--ease), filter 0.2s, box-shadow 0.2s, background 0.2s;
             width: 100%;
             letter-spacing: 0.2px;
+            min-height: 52px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
         }
 
-        .btn:active { transform: scale(0.98); }
+        .btn:active { transform: scale(0.97); }
 
         .btn-primary {
-            background: var(--accent);
-            color: #08090C;
-            margin-top: 8px;
-            box-shadow: 0 0 24px var(--accent-glow);
+            background: linear-gradient(135deg, var(--accent), #4FC8FF);
+            color: #06070B;
+            margin-top: 10px;
+            box-shadow: 0 4px 28px var(--accent-glow);
         }
 
-        .btn-primary:hover { filter: brightness(1.08); }
+        .btn-primary:hover { filter: brightness(1.08); box-shadow: 0 4px 36px var(--accent-glow); }
+        .btn-primary:disabled { opacity: 0.4; box-shadow: none; filter: none; cursor: not-allowed; }
 
         .btn-danger {
             background: var(--red-dim);
             color: var(--red);
-            border: 1px solid rgba(255,68,88,0.2);
+            border: 1px solid rgba(255,59,92,0.25);
         }
+        .btn-danger:hover { background: rgba(255,59,92,0.18); }
 
         .btn-gold {
             background: var(--gold-dim);
             color: var(--gold);
-            border: 1px solid rgba(245,200,66,0.2);
+            border: 1px solid rgba(255,194,75,0.25);
         }
 
         .btn-ghost {
@@ -166,18 +248,25 @@
             color: var(--text);
             border: 1px solid var(--border);
         }
+        .btn-ghost:hover { background: #232635; border-color: rgba(255,255,255,0.14); }
 
         .btn-green {
             background: var(--green-dim);
             color: var(--green);
-            border: 1px solid rgba(62,255,168,0.2);
+            border: 1px solid rgba(51,255,176,0.25);
         }
 
         .btn-sm {
-            padding: 8px 12px;
+            padding: 9px 13px;
             font-size: 0.82rem;
             width: auto;
-            border-radius: 6px;
+            min-height: 38px;
+            border-radius: 9px;
+        }
+
+        .btn:focus-visible, .field input:focus-visible, .player-card:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
         }
 
         /* ─── GAME SCREEN ─── */
@@ -185,6 +274,7 @@
             display: flex;
             flex-direction: column;
             background: var(--bg);
+            z-index: 1;
         }
 
         /* Top bar */
@@ -192,27 +282,29 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
-            padding: 16px 20px 12px;
+            padding: 18px 20px 14px;
             border-bottom: 1px solid var(--border);
             flex-shrink: 0;
+            background: linear-gradient(180deg, var(--bg-soft), transparent);
         }
 
         .top-bar-left {
             display: flex;
             flex-direction: column;
-            gap: 2px;
+            gap: 3px;
         }
 
         .room-label {
-            font-size: 0.7rem;
+            font-size: 0.68rem;
             color: var(--muted);
             text-transform: uppercase;
-            letter-spacing: 1px;
+            letter-spacing: 1.5px;
             font-weight: 600;
         }
 
         .room-name {
-            font-size: 1.1rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.15rem;
             font-weight: 700;
             color: var(--text);
             letter-spacing: -0.3px;
@@ -229,10 +321,12 @@
             font-size: 0.75rem;
             color: var(--accent);
             background: var(--accent-dim);
-            border: 1px solid rgba(201,240,255,0.2);
+            border: 1px solid rgba(111,227,255,0.25);
             border-radius: 20px;
-            padding: 4px 12px;
+            padding: 5px 13px;
             font-weight: 500;
+            display: flex;
+            align-items: center;
         }
 
         .stats-pill {
@@ -242,8 +336,9 @@
             font-size: 0.72rem;
             color: var(--muted);
             background: var(--elevated);
+            border: 1px solid var(--border-soft);
             border-radius: 20px;
-            padding: 5px 10px;
+            padding: 6px 11px;
         }
 
         .stats-pill .w { color: var(--green); }
@@ -251,11 +346,11 @@
 
         /* Announcement bar */
         .announcement-bar {
-            padding: 10px 20px;
-            font-size: 0.85rem;
+            padding: 12px 20px;
+            font-size: 0.87rem;
             color: var(--muted);
             border-bottom: 1px solid var(--border);
-            min-height: 40px;
+            min-height: 44px;
             display: flex;
             align-items: center;
             gap: 8px;
@@ -269,36 +364,54 @@
 
         /* Role chip — always visible during game */
         .role-chip {
-            margin: 12px 20px 0;
-            border-radius: var(--radius-sm);
-            padding: 12px 16px;
+            margin: 14px 20px 0;
+            border-radius: var(--radius);
+            padding: 14px 18px;
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 12px;
             flex-shrink: 0;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 8px 24px rgba(0,0,0,0.35);
+            animation: chipIn 0.4s var(--ease);
+        }
+
+        @keyframes chipIn {
+            from { opacity: 0; transform: translateY(-6px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
         }
 
         .role-chip.mafia {
-            background: var(--red-dim);
-            border: 1px solid rgba(255,68,88,0.2);
+            background: linear-gradient(135deg, var(--red-dim), rgba(255,59,92,0.04));
+            border: 1px solid rgba(255,59,92,0.25);
         }
 
         .role-chip.civilian {
-            background: var(--green-dim);
-            border: 1px solid rgba(62,255,168,0.2);
+            background: linear-gradient(135deg, var(--green-dim), rgba(51,255,176,0.04));
+            border: 1px solid rgba(51,255,176,0.25);
         }
 
         .role-chip.spectator {
-            background: rgba(255,255,255,0.04);
+            background: rgba(255,255,255,0.03);
             border: 1px solid var(--border);
         }
 
         .role-chip.spectator .role-chip-name { color: var(--muted); }
 
-        .role-chip-icon { font-size: 1.3rem; }
+        .role-chip-icon {
+            font-size: 1.4rem;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 12px;
+            background: rgba(255,255,255,0.05);
+            flex-shrink: 0;
+        }
 
-        .role-chip-text { flex: 1; }
+        .role-chip-text { flex: 1; min-width: 0; }
         .role-chip-name {
+            font-family: 'Space Grotesk', sans-serif;
             font-size: 0.95rem;
             font-weight: 700;
             letter-spacing: 0.5px;
@@ -307,16 +420,17 @@
         .role-chip.civilian .role-chip-name { color: var(--green); }
 
         .role-chip-hint {
-            font-size: 0.75rem;
+            font-size: 0.76rem;
             color: var(--muted);
-            margin-top: 1px;
+            margin-top: 2px;
+            line-height: 1.4;
         }
 
         /* Player list */
         .players-section {
             flex: 1;
             overflow-y: auto;
-            padding: 14px 20px;
+            padding: 16px 20px;
         }
 
         .section-label {
@@ -324,33 +438,45 @@
             font-weight: 600;
             color: var(--muted);
             text-transform: uppercase;
-            letter-spacing: 1px;
-            margin-bottom: 10px;
+            letter-spacing: 1.2px;
+            margin-bottom: 12px;
         }
 
         .player-list {
             display: flex;
             flex-direction: column;
-            gap: 8px;
+            gap: 10px;
             list-style: none;
         }
 
         .player-card {
-            background: var(--surface);
+            background: linear-gradient(135deg, var(--surface), var(--bg-soft));
             border: 1.5px solid var(--border);
             border-radius: var(--radius);
-            padding: 14px 16px;
+            padding: 15px 16px;
             display: flex;
             align-items: center;
-            gap: 12px;
+            gap: 13px;
             cursor: default;
-            transition: all 0.18s ease;
+            transition: transform 0.18s var(--ease), border-color 0.2s, background 0.2s, box-shadow 0.2s;
             position: relative;
             overflow: hidden;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.04);
+            animation: cardIn 0.35s var(--ease) both;
+        }
+
+        @keyframes cardIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to   { opacity: 1; transform: translateY(0); }
         }
 
         .player-card.votable {
             cursor: pointer;
+        }
+
+        .player-card.votable:hover {
+            border-color: rgba(255,255,255,0.16);
+            transform: translateY(-1px);
         }
 
         .player-card.votable:active {
@@ -359,38 +485,44 @@
 
         .player-card.my-target {
             border-color: var(--accent);
-            background: var(--accent-dim);
+            background: linear-gradient(135deg, var(--accent-dim), var(--surface));
+            box-shadow: 0 0 0 1px var(--accent-dim), 0 0 24px var(--accent-glow);
         }
 
         .player-card.mafia-target {
             border-color: var(--red);
-            background: var(--red-dim);
+            background: linear-gradient(135deg, var(--red-dim), var(--surface));
+            box-shadow: 0 0 0 1px var(--red-dim), 0 0 24px var(--red-glow);
         }
 
         .player-card.dead {
-            opacity: 0.3;
+            opacity: 0.35;
             border-color: transparent;
             cursor: not-allowed;
+            filter: grayscale(0.6);
         }
 
         .player-card.reconnecting {
-            opacity: 0.5;
+            opacity: 0.55;
             border-style: dashed;
         }
 
         .player-avatar {
-            width: 38px;
-            height: 38px;
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             background: var(--elevated);
+            border: 1px solid var(--border-soft);
             display: flex;
             align-items: center;
             justify-content: center;
+            font-family: 'Space Grotesk', sans-serif;
             font-size: 1rem;
             font-weight: 700;
             color: var(--muted);
             flex-shrink: 0;
             letter-spacing: -0.5px;
+            position: relative;
         }
 
         .player-info {
@@ -399,7 +531,7 @@
         }
 
         .player-name {
-            font-size: 0.95rem;
+            font-size: 0.96rem;
             font-weight: 600;
             color: var(--text);
             display: flex;
@@ -409,12 +541,12 @@
         }
 
         .tag {
-            font-size: 0.65rem;
-            font-weight: 600;
-            padding: 2px 7px;
+            font-size: 0.63rem;
+            font-weight: 700;
+            padding: 3px 8px;
             border-radius: 20px;
             text-transform: uppercase;
-            letter-spacing: 0.5px;
+            letter-spacing: 0.6px;
         }
 
         .tag-you { background: var(--accent-dim); color: var(--accent); }
@@ -423,7 +555,7 @@
         .tag-reconnecting { background: var(--red-dim); color: var(--red); }
 
         .player-status {
-            font-size: 0.75rem;
+            font-size: 0.76rem;
             color: var(--muted);
             margin-top: 2px;
         }
@@ -438,13 +570,14 @@
             position: absolute;
             bottom: 0;
             left: 0;
-            height: 2px;
-            background: var(--accent);
-            transition: width 0.4s ease;
-            border-radius: 0 2px 0 0;
+            height: 3px;
+            background: linear-gradient(90deg, var(--accent), #4FC8FF);
+            transition: width 0.5s var(--ease);
+            border-radius: 0 3px 0 0;
+            box-shadow: 0 0 8px var(--accent-glow);
         }
 
-        .vote-bar.mafia-bar { background: var(--red); }
+        .vote-bar.mafia-bar { background: linear-gradient(90deg, var(--red), #FF6B85); box-shadow: 0 0 8px var(--red-glow); }
 
         .vote-count {
             font-family: 'DM Mono', monospace;
@@ -453,7 +586,7 @@
             color: var(--accent);
             background: var(--accent-dim);
             border-radius: 20px;
-            padding: 3px 9px;
+            padding: 4px 10px;
             flex-shrink: 0;
         }
 
@@ -464,13 +597,13 @@
 
         /* Bottom action zone */
         .action-zone {
-            padding: 14px 20px 28px;
+            padding: 16px 20px 30px;
             border-top: 1px solid var(--border);
             display: flex;
             flex-direction: column;
             gap: 10px;
             flex-shrink: 0;
-            background: var(--bg);
+            background: linear-gradient(0deg, var(--bg-soft), transparent);
         }
 
         .action-row {
@@ -480,98 +613,7 @@
 
         .action-row .btn { flex: 1; }
 
-        /* Video container */
-        #video-container {
-            position: fixed;
-            bottom: 100px;
-            right: 16px;
-            width: 130px;
-            height: 180px;
-            border-radius: var(--radius);
-            overflow: hidden;
-            border: 1.5px solid var(--accent);
-            box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px var(--accent-glow);
-            z-index: 100;
-            background: var(--surface);
-            display: none;
-        }
-
-        #video-container.active { display: block; }
-
-        #video-container:fullscreen,
-        #video-container:-webkit-full-screen {
-            width: 100vw !important;
-            height: 100vh !important;
-            border-radius: 0 !important;
-            right: 0 !important;
-            bottom: 0 !important;
-        }
-
-        /* ─── ROLE REVEAL OVERLAY ─── */
-        #role-overlay {
-            position: fixed;
-            inset: 0;
-            background: rgba(8,9,12,0.97);
-            z-index: 500;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 24px;
-            padding: 40px 32px;
-            opacity: 0;
-            pointer-events: none;
-            transition: opacity 0.4s ease;
-        }
-
-        #role-overlay.visible {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        .role-reveal-label {
-            font-size: 0.75rem;
-            text-transform: uppercase;
-            letter-spacing: 2px;
-            color: var(--muted);
-            font-weight: 600;
-        }
-
-        .role-reveal-icon {
-            font-size: 4rem;
-            line-height: 1;
-        }
-
-        .role-reveal-name {
-            font-size: 2.8rem;
-            font-weight: 700;
-            letter-spacing: -1px;
-        }
-
-        .role-reveal-name.mafia { color: var(--red); }
-        .role-reveal-name.civilian { color: var(--green); }
-
-        .role-reveal-hint {
-            font-size: 0.95rem;
-            color: var(--muted);
-            text-align: center;
-            line-height: 1.5;
-            max-width: 260px;
-        }
-
-        .role-reveal-dismiss {
-            font-size: 0.8rem;
-            color: var(--muted);
-            margin-top: 8px;
-            animation: blink 1.5s ease-in-out infinite;
-        }
-
-        @keyframes blink {
-            0%, 100% { opacity: 0.4; }
-            50% { opacity: 1; }
-        }
-
-        /* ─── LOBBY (pre-game) ─── */
+        /* Lobby (pre-game) */
         #lobby-section {
             flex: 1;
             overflow-y: auto;
@@ -579,29 +621,31 @@
         }
 
         .lobby-hero {
-            background: var(--surface);
+            background: linear-gradient(155deg, var(--surface), var(--bg-soft));
             border: 1px solid var(--border);
-            border-radius: var(--radius);
-            padding: 20px;
-            margin-bottom: 16px;
+            border-radius: var(--radius-lg);
+            padding: 24px 20px;
+            margin-bottom: 18px;
             text-align: center;
+            box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);
         }
 
         .lobby-hero-title {
-            font-size: 1.3rem;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.35rem;
             font-weight: 700;
             color: var(--accent);
             margin-bottom: 4px;
         }
 
         .lobby-hero-sub {
-            font-size: 0.85rem;
+            font-size: 0.86rem;
             color: var(--muted);
         }
 
         .player-count-ring {
-            width: 80px;
-            height: 80px;
+            width: 84px;
+            height: 84px;
             border-radius: 50%;
             background: var(--elevated);
             border: 2px solid var(--accent);
@@ -609,13 +653,19 @@
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            margin: 16px auto;
-            box-shadow: 0 0 20px var(--accent-glow);
+            margin: 18px auto;
+            box-shadow: 0 0 0 6px var(--accent-dim), 0 0 28px var(--accent-glow);
+            animation: ringBreathe 3s ease-in-out infinite;
+        }
+
+        @keyframes ringBreathe {
+            0%, 100% { transform: scale(1); }
+            50%      { transform: scale(1.035); }
         }
 
         .player-count-num {
             font-family: 'DM Mono', monospace;
-            font-size: 1.6rem;
+            font-size: 1.7rem;
             font-weight: 500;
             color: var(--accent);
             line-height: 1;
@@ -628,28 +678,28 @@
             letter-spacing: 1px;
         }
 
-        /* ─── GAME OVER ─── */
+        /* Game over */
         .game-over-banner {
             margin: 0 20px 12px;
-            background: var(--surface);
-            border: 1px solid var(--border);
+            background: linear-gradient(135deg, var(--surface), var(--bg-soft));
+            border: 1px solid var(--gold);
             border-radius: var(--radius);
-            padding: 16px 20px;
+            padding: 18px 20px;
             text-align: center;
-            font-size: 1rem;
-            font-weight: 600;
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 1.05rem;
+            font-weight: 700;
             color: var(--text);
             display: none;
+            box-shadow: 0 0 32px rgba(255,194,75,0.18);
         }
 
-        .game-over-banner.visible { display: block; }
+        .game-over-banner.visible { display: block; animation: chipIn 0.5s var(--ease); }
 
-        /* ─── SCROLLBAR ─── */
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: var(--elevated); border-radius: 4px; }
 
-        /* ─── PULSE RING (round indicator) ─── */
         .pulse-ring {
             display: inline-block;
             width: 8px;
@@ -661,21 +711,316 @@
         }
 
         @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 var(--accent-glow); }
-            70% { box-shadow: 0 0 0 10px rgba(201,240,255,0); }
-            100% { box-shadow: 0 0 0 0 rgba(201,240,255,0); }
+            0%   { box-shadow: 0 0 0 0 var(--accent-glow); }
+            70%  { box-shadow: 0 0 0 10px rgba(111,227,255,0); }
+            100% { box-shadow: 0 0 0 0 rgba(111,227,255,0); }
         }
 
-        /* ─── RECORD STATUS ─── */
         .record-status {
-            font-size: 0.78rem;
+            font-size: 0.79rem;
             color: var(--muted);
             text-align: center;
-            padding: 0 4px;
+            padding: 6px 10px;
             display: none;
+            background: var(--elevated);
+            border-radius: 20px;
+            border: 1px solid var(--border-soft);
         }
 
-        .record-status.visible { display: block; }
+        .record-status.visible { display: block; animation: chipIn 0.3s var(--ease); }
+
+
+        /* ─── VIDEO OVERLAY (Zoom-style full-screen) ─── */
+        #video-overlay {
+            position: fixed;
+            inset: 0;
+            z-index: 200;
+            background: #000;
+            display: none;
+            flex-direction: column;
+        }
+
+        #video-overlay.active { display: flex; }
+
+        #video-container {
+            flex: 1;
+            width: 100%;
+            min-height: 0;
+        }
+
+        .video-top-bar {
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            z-index: 10;
+            background: linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 100%);
+            padding: 14px 16px 36px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            transition: opacity 0.35s ease;
+        }
+
+        .video-top-bar.controls-hidden { opacity: 0; pointer-events: none; }
+
+        .video-back-btn {
+            background: rgba(255,255,255,0.15);
+            border: none;
+            border-radius: 20px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.82rem;
+            font-weight: 600;
+            padding: 7px 14px;
+            cursor: pointer;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .video-back-btn:active { background: rgba(255,255,255,0.28); }
+
+        .video-meeting-info { flex: 1; }
+
+        .video-meeting-name {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: #fff;
+            text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+        }
+
+        .video-participant-count {
+            font-size: 0.7rem;
+            color: rgba(255,255,255,0.55);
+            margin-top: 1px;
+        }
+
+        .video-rec-pill {
+            display: none;
+            align-items: center;
+            gap: 5px;
+            background: rgba(255,59,48,0.2);
+            border: 1px solid rgba(255,59,48,0.4);
+            border-radius: 20px;
+            padding: 4px 10px;
+            font-size: 0.7rem;
+            color: #FF3B30;
+            font-weight: 600;
+        }
+
+        .video-rec-pill.active { display: flex; }
+        .rec-dot { width: 6px; height: 6px; border-radius: 50%; background: #FF3B30; animation: blink 1s ease-in-out infinite; }
+
+        .video-bottom-bar {
+            position: absolute;
+            bottom: 0; left: 0; right: 0;
+            z-index: 10;
+            background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 100%);
+            padding: 36px 24px 40px;
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            transition: opacity 0.35s ease;
+        }
+
+        .video-bottom-bar.controls-hidden { opacity: 0; pointer-events: none; }
+
+        .video-controls-group {
+            display: flex;
+            gap: 18px;
+            align-items: flex-end;
+        }
+
+        .video-ctrl {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+            min-width: 48px;
+        }
+
+        .video-ctrl-icon {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.18);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.12);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.25rem;
+            transition: background 0.18s;
+        }
+
+        .video-ctrl:active .video-ctrl-icon { background: rgba(255,255,255,0.3); }
+        .video-ctrl.muted .video-ctrl-icon { background: rgba(255,59,48,0.35); border-color: rgba(255,59,48,0.5); }
+
+        .video-ctrl-label {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+            font-family: inherit;
+            white-space: nowrap;
+        }
+
+        .video-end-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+            background: none;
+            border: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .video-end-icon {
+            width: 62px;
+            height: 62px;
+            border-radius: 50%;
+            background: #FF3B30;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            box-shadow: 0 4px 24px rgba(255,59,48,0.55);
+            transition: transform 0.15s, background 0.18s;
+        }
+
+        .video-end-btn:active .video-end-icon { transform: scale(0.92); background: #d42c22; }
+
+        .video-end-label {
+            font-size: 0.65rem;
+            color: rgba(255,255,255,0.7);
+            font-weight: 500;
+            font-family: inherit;
+        }
+
+        .video-connecting {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 18px;
+            background: #111214;
+            z-index: 6;
+            transition: opacity 0.4s ease;
+        }
+
+        .video-connecting.gone { opacity: 0; pointer-events: none; }
+
+        .connecting-spinner {
+            width: 48px;
+            height: 48px;
+            border: 3px solid rgba(201,240,255,0.12);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 0.85s linear infinite;
+        }
+
+        @keyframes spin { to { transform: rotate(360deg); } }
+
+        .connecting-label {
+            font-size: 0.88rem;
+            color: rgba(255,255,255,0.45);
+            font-weight: 500;
+        }
+
+
+        
+
+                /* ─── ROLE REVEAL OVERLAY ─── */
+        #role-overlay {
+            position: fixed;
+            inset: 0;
+            background: radial-gradient(ellipse at center, rgba(18,20,28,0.98), rgba(6,7,11,0.99));
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 22px;
+            padding: 40px 32px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+            perspective: 1000px;
+        }
+
+        #role-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        #role-overlay.visible .role-reveal-icon,
+        #role-overlay.visible .role-reveal-name,
+        #role-overlay.visible .role-reveal-label,
+        #role-overlay.visible .role-reveal-hint {
+            animation: revealMaterialize 0.65s var(--ease) both;
+        }
+        #role-overlay.visible .role-reveal-label { animation-delay: 0s; }
+        #role-overlay.visible .role-reveal-icon  { animation-delay: 0.08s; }
+        #role-overlay.visible .role-reveal-name  { animation-delay: 0.16s; }
+        #role-overlay.visible .role-reveal-hint  { animation-delay: 0.26s; }
+
+        @keyframes revealMaterialize {
+            from { opacity: 0; transform: translateY(14px) rotateX(-25deg) scale(0.92); }
+            to   { opacity: 1; transform: translateY(0) rotateX(0) scale(1); }
+        }
+
+        .role-reveal-label {
+            font-size: 0.76rem;
+            text-transform: uppercase;
+            letter-spacing: 2.5px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .role-reveal-icon {
+            font-size: 4.2rem;
+            line-height: 1;
+            filter: drop-shadow(0 0 24px currentColor);
+        }
+
+        .role-reveal-name {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .role-reveal-name.mafia { color: var(--red); text-shadow: 0 0 40px var(--red-glow); }
+        .role-reveal-name.civilian { color: var(--green); text-shadow: 0 0 40px var(--green-glow); }
+
+        .role-reveal-hint {
+            font-size: 0.96rem;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.55;
+            max-width: 270px;
+        }
+
+        .role-reveal-dismiss {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 8px;
+            animation: blink 1.6s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.4; }
+            50%      { opacity: 1; }
+        }
+
     </style>
 </head>
 <body>
@@ -683,6 +1028,12 @@
 <!-- ═══ JOIN SCREEN ═══ -->
 <div id="join-screen" class="screen">
     <div class="join-inner">
+        <div class="join-mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent)">
+                <path d="M12 2 3 6v6c0 5 3.8 8.7 9 10 5.2-1.3 9-5 9-10V6z"></path>
+                <path d="M9 12l2 2 4-4" stroke="var(--text)"></path>
+            </svg>
+        </div>
         <div class="join-title">Mafia<span>.</span></div>
         <div class="join-sub">Social deduction. Real stakes.</div>
 
@@ -757,12 +1108,9 @@
 
     <!-- Action zone -->
     <div class="action-zone">
-        <div id="record-status" class="record-status"></div>
-
-        <!-- Video + record row -->
+        <!-- Video row -->
         <div class="action-row" id="video-row">
             <button class="btn btn-ghost" id="video-btn">🎥 Join Video</button>
-            <button class="btn btn-ghost hidden" id="record-btn">⏺ Record</button>
         </div>
 
         <!-- Host controls -->
@@ -790,8 +1138,59 @@
     <div class="role-reveal-dismiss">Tap anywhere to continue</div>
 </div>
 
-<!-- Video container (PiP) -->
-<div id="video-container"></div>
+<!-- ═══ VIDEO OVERLAY (Zoom-style) ═══ -->
+<div id="video-overlay">
+    <!-- Connecting state -->
+    <div class="video-connecting" id="video-connecting">
+        <div class="connecting-spinner"></div>
+        <div class="connecting-label">Connecting to video...</div>
+    </div>
+
+    <!-- Jitsi iframe renders here -->
+    <div id="video-container"></div>
+
+    <!-- Top bar -->
+    <div class="video-top-bar" id="video-top-bar">
+        <button class="video-back-btn" id="video-back-btn">← Game</button>
+        <div class="video-meeting-info">
+            <div class="video-meeting-name" id="video-meeting-name">Room</div>
+            <div class="video-participant-count" id="video-participant-count">Connecting...</div>
+        </div>
+        <div class="video-rec-pill" id="video-rec-pill">
+            <div class="rec-dot"></div> REC
+        </div>
+    </div>
+
+    <!-- Bottom toolbar -->
+    <div class="video-bottom-bar" id="video-bottom-bar">
+        <div class="video-controls-group">
+            <button class="video-ctrl" id="vid-mic-btn">
+                <div class="video-ctrl-icon">🎙</div>
+                <span class="video-ctrl-label">Mute</span>
+            </button>
+            <button class="video-ctrl" id="vid-cam-btn">
+                <div class="video-ctrl-icon">📹</div>
+                <span class="video-ctrl-label">Stop Video</span>
+            </button>
+        </div>
+
+        <button class="video-end-btn" id="vid-end-btn">
+            <div class="video-end-icon">📵</div>
+            <span class="video-end-label">End</span>
+        </button>
+
+        <div class="video-controls-group">
+            <button class="video-ctrl" id="vid-record-btn">
+                <div class="video-ctrl-icon">⏺</div>
+                <span class="video-ctrl-label">Record</span>
+            </button>
+            <button class="video-ctrl" id="vid-participants-btn">
+                <div class="video-ctrl-icon">👥</div>
+                <span class="video-ctrl-label">Players</span>
+            </button>
+        </div>
+    </div>
+</div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -844,7 +1243,6 @@
     const voteSectionLabel = document.getElementById('vote-section-label');
     const recordStatus = document.getElementById('record-status');
     const videoBtn = document.getElementById('video-btn');
-    const recordBtn = document.getElementById('record-btn');
     const hostControls = document.getElementById('host-controls');
     const startBtn = document.getElementById('start-btn');
     const hostGameControls = document.getElementById('host-game-controls');
@@ -855,7 +1253,22 @@
     const revealIcon = document.getElementById('reveal-icon');
     const revealName = document.getElementById('reveal-name');
     const revealHint = document.getElementById('reveal-hint');
+
+    // Video overlay elements
+    const videoOverlay = document.getElementById('video-overlay');
     const videoContainer = document.getElementById('video-container');
+    const videoConnecting = document.getElementById('video-connecting');
+    const videoTopBar = document.getElementById('video-top-bar');
+    const videoBottomBar = document.getElementById('video-bottom-bar');
+    const videoBackBtn = document.getElementById('video-back-btn');
+    const videoMeetingName = document.getElementById('video-meeting-name');
+    const videoParticipantCount = document.getElementById('video-participant-count');
+    const videoRecPill = document.getElementById('video-rec-pill');
+    const vidMicBtn = document.getElementById('vid-mic-btn');
+    const vidCamBtn = document.getElementById('vid-cam-btn');
+    const vidEndBtn = document.getElementById('vid-end-btn');
+    const vidRecordBtn = document.getElementById('vid-record-btn');
+    const vidParticipantsBtn = document.getElementById('vid-participants-btn');
 
     // ── JOIN ──
     joinBtn.addEventListener('click', attemptJoin);
@@ -1217,23 +1630,60 @@
         }
     });
 
-    // ── VIDEO ──
+    // ── VIDEO (Zoom-style overlay) ──
+
+    let micMuted = false;
+    let camOff = false;
+    let controlsHideTimer = null;
+
+    // "Join Video" button in game screen
     videoBtn.addEventListener('click', async () => {
         if (jitsiApi) {
-            // Expand to fullscreen portrait
-            goFullscreen();
+            // Already in call — just show the overlay again
+            videoOverlay.classList.add('active');
+            showControls();
             return;
         }
         videoBtn.innerText = '⏳ Connecting...';
         videoBtn.disabled = true;
         await initVideo();
         videoBtn.disabled = false;
+        if (!jitsiApi) videoBtn.innerText = '🎥 Join Video';
     });
+
+    // "← Game" back button — hides overlay, call stays alive
+    videoBackBtn.addEventListener('click', () => {
+        videoOverlay.classList.remove('active');
+        videoBtn.innerText = '🎥 Return to Video';
+    });
+
+    // Tap anywhere on overlay to toggle controls
+    videoOverlay.addEventListener('click', (e) => {
+        if (e.target === videoOverlay || e.target === videoContainer) {
+            toggleControls();
+        }
+    });
+
+    function showControls() {
+        videoTopBar.classList.remove('controls-hidden');
+        videoBottomBar.classList.remove('controls-hidden');
+        clearTimeout(controlsHideTimer);
+        controlsHideTimer = setTimeout(hideControls, 3500);
+    }
+
+    function hideControls() {
+        videoTopBar.classList.add('controls-hidden');
+        videoBottomBar.classList.add('controls-hidden');
+    }
+
+    function toggleControls() {
+        const hidden = videoTopBar.classList.contains('controls-hidden');
+        if (hidden) showControls(); else hideControls();
+    }
 
     async function initVideo() {
         if (typeof JitsiMeetExternalAPI === 'undefined') {
             announce('Video unavailable — check your connection.', false);
-            videoBtn.innerText = '🎥 Join Video';
             return;
         }
 
@@ -1250,12 +1700,22 @@
             }
             tokenData = await res.json();
         } catch (err) {
-            announce('Video token error: ' + err.message, false);
-            videoBtn.innerText = '🎥 Join Video';
+            announce('Video error: ' + err.message, false);
             return;
         }
 
-        videoContainer.classList.add('active');
+        // Show overlay with connecting spinner
+        videoOverlay.classList.add('active');
+        videoConnecting.classList.remove('gone');
+        videoMeetingName.innerText = currentRoom;
+        videoParticipantCount.innerText = 'Connecting...';
+        showControls();
+
+        // Lock to portrait
+        if (screen.orientation?.lock) {
+            screen.orientation.lock('portrait').catch(() => {});
+        }
+
         jitsiApi = new JitsiMeetExternalAPI('8x8.vc', {
             roomName: tokenData.roomName,
             jwt: tokenData.token,
@@ -1268,55 +1728,96 @@
                 startWithVideoMuted: false,
                 prejoinPageEnabled: false,
                 disableDeepLinking: true,
-                tileViewEnabled: true
+                tileViewEnabled: true,
+                // Hide Jitsi's own toolbar completely — we have our own
+                toolbarButtons: []
             },
             interfaceConfigOverwrite: {
-                TOOLBAR_BUTTONS: ['microphone', 'camera', 'hangup', 'fullscreen', 'tileview'],
-                SHOW_JITSI_WATERMARK: false
+                TOOLBAR_BUTTONS: [],
+                SHOW_JITSI_WATERMARK: false,
+                SHOW_WATERMARK_FOR_GUESTS: false,
+                DISABLE_JOIN_LEAVE_NOTIFICATIONS: true
             }
         });
 
-        jitsiApi.addEventListener('videoConferenceJoined', () => {
-            videoBtn.innerText = '🎥 Expand Video';
-            recordBtn.classList.remove('hidden');
-            goFullscreen();
+        jitsiApi.addEventListener('videoConferenceJoined', (data) => {
+            videoConnecting.classList.add('gone');
+            videoParticipantCount.innerText = '1 participant';
+            videoBtn.innerText = '🎥 Return to Video';
+            showControls();
             startRecording();
         });
 
-        jitsiApi.addEventListener('videoConferenceLeft', cleanup);
-        jitsiApi.addEventListener('readyToClose', cleanup);
+        jitsiApi.addEventListener('participantJoined', () => {
+            const count = jitsiApi.getParticipantsInfo().length;
+            videoParticipantCount.innerText = `${count} participant${count !== 1 ? 's' : ''}`;
+        });
+
+        jitsiApi.addEventListener('participantLeft', () => {
+            const count = jitsiApi.getParticipantsInfo().length;
+            videoParticipantCount.innerText = `${count} participant${count !== 1 ? 's' : ''}`;
+        });
+
+        jitsiApi.addEventListener('audioMuteStatusChanged', ({ muted }) => {
+            micMuted = muted;
+            vidMicBtn.querySelector('.video-ctrl-icon').innerText = muted ? '🔇' : '🎙';
+            vidMicBtn.querySelector('.video-ctrl-label').innerText = muted ? 'Unmute' : 'Mute';
+            vidMicBtn.classList.toggle('muted', muted);
+        });
+
+        jitsiApi.addEventListener('videoMuteStatusChanged', ({ muted }) => {
+            camOff = muted;
+            vidCamBtn.querySelector('.video-ctrl-icon').innerText = muted ? '📷' : '📹';
+            vidCamBtn.querySelector('.video-ctrl-label').innerText = muted ? 'Start Video' : 'Stop Video';
+            vidCamBtn.classList.toggle('muted', muted);
+        });
+
+        jitsiApi.addEventListener('videoConferenceLeft', cleanupVideo);
+        jitsiApi.addEventListener('readyToClose', cleanupVideo);
     }
 
-    function cleanup() {
-        videoContainer.classList.remove('active');
+    // ── ZOOM-STYLE TOOLBAR BUTTONS ──
+
+    vidMicBtn.addEventListener('click', () => {
+        jitsiApi?.executeCommand('toggleAudio');
+        showControls();
+    });
+
+    vidCamBtn.addEventListener('click', () => {
+        jitsiApi?.executeCommand('toggleVideo');
+        showControls();
+    });
+
+    vidEndBtn.addEventListener('click', () => {
+        jitsiApi?.executeCommand('hangup');
+        cleanupVideo();
+    });
+
+    vidParticipantsBtn.addEventListener('click', () => {
+        // Toggle back to game screen — they can see the player list there
+        videoOverlay.classList.remove('active');
+        videoBtn.innerText = '🎥 Return to Video';
+        showControls();
+    });
+
+    vidRecordBtn.addEventListener('click', () => {
+        if (!isRecording) startRecording(); else stopRecording();
+        showControls();
+    });
+
+    function cleanupVideo() {
+        videoOverlay.classList.remove('active');
+        videoConnecting.classList.remove('gone');
         videoBtn.innerText = '🎥 Join Video';
-        recordBtn.classList.add('hidden');
+        micMuted = false;
+        camOff = false;
+        clearTimeout(controlsHideTimer);
         stopRecording();
+        if (screen.orientation?.unlock) screen.orientation.unlock();
         if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
     }
 
-    function goFullscreen() {
-        const req = videoContainer.requestFullscreen || videoContainer.webkitRequestFullscreen;
-        if (req) {
-            req.call(videoContainer).then(() => {
-                if (screen.orientation?.lock) {
-                    screen.orientation.lock('portrait').catch(() => {});
-                }
-            }).catch(() => {});
-        }
-    }
-
-    document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement && jitsiApi) {
-            if (screen.orientation?.unlock) screen.orientation.unlock();
-        }
-    });
-
     // ── RECORDING ──
-    recordBtn.addEventListener('click', () => {
-        if (!isRecording) startRecording(); else stopRecording();
-    });
-
     async function startRecording() {
         if (isRecording) return;
         try {
@@ -1328,26 +1829,29 @@
             mediaRecorder.onstop = saveRecording;
             mediaRecorder.start();
             isRecording = true;
-            recordBtn.innerText = '⏹ Stop';
-            recordStatus.innerText = '🔴 Recording your camera — tap Stop to save.';
-            recordStatus.classList.add('visible');
+            vidRecordBtn.querySelector('.video-ctrl-icon').innerText = '⏹';
+            vidRecordBtn.querySelector('.video-ctrl-label').innerText = 'Stop Rec';
+            vidRecordBtn.classList.add('muted');
+            videoRecPill.classList.add('active');
         } catch (err) {
-            recordStatus.innerText = `⚠️ ${err.name === 'NotAllowedError' ? 'Camera permission denied.' : err.message}`;
-            recordStatus.classList.add('visible');
+            // Recording failed silently — camera conflict with Jitsi is expected
+            console.warn('Recording unavailable:', err.message);
         }
     }
 
     function stopRecording() {
         if (!isRecording || !mediaRecorder) return;
         isRecording = false;
-        recordBtn.innerText = '⏺ Record';
-        recordStatus.innerText = '💾 Saving...';
+        vidRecordBtn.querySelector('.video-ctrl-icon').innerText = '⏺';
+        vidRecordBtn.querySelector('.video-ctrl-label').innerText = 'Record';
+        vidRecordBtn.classList.remove('muted');
+        videoRecPill.classList.remove('active');
         try { mediaRecorder.stop(); } catch (e) {}
         if (recordingStream) { recordingStream.getTracks().forEach(t => t.stop()); recordingStream = null; }
     }
 
     function saveRecording() {
-        if (!recordedChunks.length) { recordStatus.classList.remove('visible'); return; }
+        if (!recordedChunks.length) return;
         const blob = new Blob(recordedChunks, { type: 'video/webm' });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
@@ -1357,10 +1861,8 @@
         a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 5000);
-        recordStatus.innerText = '✅ Saved to your downloads.';
         recordedChunks = [];
     }
-
 
 </script>
 </body>
