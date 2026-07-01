@@ -730,6 +730,11 @@
         .record-status.visible { display: block; animation: chipIn 0.3s var(--ease); }
 
 
+        /* Hide Jitsi's native toolbar — we use our own Zoom-style one */
+        #video-container iframe {
+            border: none;
+        }
+
         /* ─── VIDEO OVERLAY (Zoom-style full-screen) ─── */
         #video-overlay {
             position: fixed;
@@ -1728,19 +1733,25 @@
                 startWithVideoMuted: false,
                 prejoinPageEnabled: false,
                 disableDeepLinking: true,
-                tileViewEnabled: true,
-                // Hide Jitsi's own toolbar completely — we have our own
-                toolbarButtons: []
+                tileViewEnabled: true
             },
             interfaceConfigOverwrite: {
-                TOOLBAR_BUTTONS: [],
+                TOOLBAR_BUTTONS: ['microphone', 'camera', 'hangup', 'tileview'],
                 SHOW_JITSI_WATERMARK: false,
                 SHOW_WATERMARK_FOR_GUESTS: false,
                 DISABLE_JOIN_LEAVE_NOTIFICATIONS: true
             }
         });
 
+        // Fallback: if videoConferenceJoined doesn't fire within 10s,
+        // dismiss spinner anyway so the user isn't stuck on a black screen
+        const spinnerFallback = setTimeout(() => {
+            videoConnecting.classList.add('gone');
+            videoParticipantCount.innerText = 'Connected';
+        }, 10000);
+
         jitsiApi.addEventListener('videoConferenceJoined', (data) => {
+            clearTimeout(spinnerFallback);
             videoConnecting.classList.add('gone');
             videoParticipantCount.innerText = '1 participant';
             videoBtn.innerText = '🎥 Return to Video';
