@@ -2,1123 +2,1346 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mafia Platform - Premium Edition</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Mafia</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
     <script src="https://8x8.vc/vpaas-magic-cookie-07a593c9625c45d5b393a330482f2d32/external_api.js"></script>
     <style>
-        /* Modern CSS Reset & Variable Tokens */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
         :root {
-            --bg-dark: #0a0b0e;
-            --panel-bg: rgba(21, 23, 30, 0.75);
-            --border-color: rgba(255, 255, 255, 0.08);
-            --text-main: #f3f4f6;
-            --text-muted: #9ca3af;
-            --accent-red: #ff3344;
-            --accent-red-hover: #dd1122;
-            --accent-green: #00e699;
-            --accent-gold: #f1c40f;
-            --accent-blue: #00bc8c;
+            --bg:        #08090C;
+            --surface:   #13141A;
+            --elevated:  #1E2028;
+            --border:    rgba(255,255,255,0.07);
+            --text:      #E8E9F0;
+            --muted:     #6B7080;
+            --accent:    #C9F0FF;
+            --accent-dim: rgba(201,240,255,0.12);
+            --accent-glow: rgba(201,240,255,0.25);
+            --red:       #FF4458;
+            --red-dim:   rgba(255,68,88,0.12);
+            --gold:      #F5C842;
+            --gold-dim:  rgba(245,200,66,0.12);
+            --green:     #3EFFA8;
+            --green-dim: rgba(62,255,168,0.12);
+            --radius:    14px;
+            --radius-sm: 8px;
         }
 
-        body { 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; 
-            margin: 0; 
-            padding: 16px; 
-            background: var(--bg-dark); 
-            color: var(--text-main); 
-            min-height: 100vh;
+        html, body {
+            height: 100%;
+            font-family: 'DM Sans', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            -webkit-font-smoothing: antialiased;
+            overflow: hidden;
+        }
+
+        /* ─── SCREENS ─── */
+        .screen {
+            position: fixed;
+            inset: 0;
             display: flex;
+            flex-direction: column;
+            transition: opacity 0.3s ease, transform 0.3s ease;
+        }
+        .screen.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(12px);
+        }
+
+        /* ─── JOIN SCREEN ─── */
+        #join-screen {
+            align-items: center;
             justify-content: center;
-            align-items: flex-start;
-            box-sizing: border-box;
-            transition: background 0.8s ease;
+            padding: 32px 24px;
+            background: var(--bg);
         }
 
-        /* Fluid App Container with Glassmorphism styling */
-        .app-container { 
+        .join-inner {
             width: 100%;
-            max-width: 520px; 
-            background: var(--panel-bg); 
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            padding: 24px; 
-            border-radius: 16px; 
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.5); 
-            border: 1px solid var(--border-color);
-            box-sizing: border-box;
+            max-width: 380px;
+            display: flex;
+            flex-direction: column;
+            gap: 0;
         }
 
-        /* Clean Minimalist Typography */
-        h1 {
-            font-size: 1.5rem;
-            font-weight: 800;
-            margin-top: 0;
-            margin-bottom: 4px;
-            letter-spacing: -0.5px;
+        .join-title {
+            font-size: 2.6rem;
+            font-weight: 700;
+            letter-spacing: -1.5px;
+            line-height: 1;
+            margin-bottom: 6px;
+            color: var(--text);
+        }
+
+        .join-title span {
+            color: var(--accent);
+        }
+
+        .join-sub {
+            font-size: 0.9rem;
+            color: var(--muted);
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        .field {
+            display: flex;
+            flex-direction: column;
+            gap: 7px;
+            margin-bottom: 14px;
+        }
+
+        .field label {
+            font-size: 0.75rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 0.8px;
+        }
+
+        .field input {
+            background: var(--elevated);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text);
+            font-family: inherit;
+            font-size: 1rem;
+            font-weight: 500;
+            padding: 14px 16px;
+            outline: none;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            width: 100%;
+        }
+
+        .field input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-dim);
+        }
+
+        .field input::placeholder { color: var(--muted); }
+
+        .btn {
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 0.95rem;
+            font-weight: 600;
+            padding: 15px 20px;
+            transition: all 0.18s ease;
+            width: 100%;
+            letter-spacing: 0.2px;
+        }
+
+        .btn:active { transform: scale(0.98); }
+
+        .btn-primary {
+            background: var(--accent);
+            color: #08090C;
+            margin-top: 8px;
+            box-shadow: 0 0 24px var(--accent-glow);
+        }
+
+        .btn-primary:hover { filter: brightness(1.08); }
+
+        .btn-danger {
+            background: var(--red-dim);
+            color: var(--red);
+            border: 1px solid rgba(255,68,88,0.2);
+        }
+
+        .btn-gold {
+            background: var(--gold-dim);
+            color: var(--gold);
+            border: 1px solid rgba(245,200,66,0.2);
+        }
+
+        .btn-ghost {
+            background: var(--elevated);
+            color: var(--text);
+            border: 1px solid var(--border);
+        }
+
+        .btn-green {
+            background: var(--green-dim);
+            color: var(--green);
+            border: 1px solid rgba(62,255,168,0.2);
+        }
+
+        .btn-sm {
+            padding: 8px 12px;
+            font-size: 0.82rem;
+            width: auto;
+            border-radius: 6px;
+        }
+
+        /* ─── GAME SCREEN ─── */
+        #game-screen {
+            display: flex;
+            flex-direction: column;
+            background: var(--bg);
+        }
+
+        /* Top bar */
+        .top-bar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px 20px 12px;
+            border-bottom: 1px solid var(--border);
+            flex-shrink: 0;
+        }
+
+        .top-bar-left {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+
+        .room-label {
+            font-size: 0.7rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 600;
+        }
+
+        .room-name {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text);
+            letter-spacing: -0.3px;
+        }
+
+        .top-bar-right {
             display: flex;
             align-items: center;
             gap: 8px;
         }
-        
-        h2 { font-size: 1.2rem; margin: 16px 0 8px; font-weight: 600; color: var(--text-main); }
-        h3 { font-size: 0.95rem; margin: 12px 0 8px; font-weight: 500; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.5px; }
 
-        .version-pill {
-            font-size: 0.7rem;
-            background: rgba(255, 255, 255, 0.1);
-            padding: 2px 8px;
+        .round-badge {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.75rem;
+            color: var(--accent);
+            background: var(--accent-dim);
+            border: 1px solid rgba(201,240,255,0.2);
             border-radius: 20px;
-            color: var(--text-muted);
-            font-weight: 400;
-        }
-
-        /* Elegant Form Control Fields */
-        .input-group {
-            margin-bottom: 12px;
-        }
-        .input-group label {
-            display: block;
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            margin-bottom: 6px;
+            padding: 4px 12px;
             font-weight: 500;
         }
-        input { 
-            width: 100%; 
-            padding: 14px 16px; 
-            border-radius: 10px; 
-            border: 1px solid var(--border-color);
-            background: rgba(0, 0, 0, 0.2);
-            color: #fff; 
-            box-sizing: border-box; 
-            font-size: 1rem; 
-            outline: none;
-            transition: all 0.2s ease;
-        }
-        input:focus {
-            border-color: var(--accent-red);
-            background: rgba(0, 0, 0, 0.4);
-            box-shadow: 0 0 0 3px rgba(255, 51, 68, 0.15);
-        }
 
-        /* Buttons with tactile feedback */
-        button { 
-            width: 100%; 
-            padding: 14px; 
-            border-radius: 10px; 
-            border: none; 
-            box-sizing: border-box; 
-            font-size: 1rem; 
-            font-weight: 600; 
-            cursor: pointer; 
-            background: var(--accent-red); 
-            color: white; 
-            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1); 
-            box-shadow: 0 4px 12px rgba(255, 51, 68, 0.2);
-        }
-        button:hover { 
-            background: var(--accent-red-hover); 
-            transform: translateY(-1px);
-        }
-        button:active {
-            transform: translateY(1px);
-        }
-        button:disabled {
-            background: rgba(255, 255, 255, 0.08);
-            color: var(--text-muted);
-            cursor: not-allowed;
-            box-shadow: none;
-            transform: none;
-        }
-
-        .hidden { display: none !important; }
-        ul { list-style-type: none; padding: 0; margin: 0; }
-        
-        /* Profile Dashboard Badge */
-        .profile-badge { 
-            background: rgba(255, 255, 255, 0.04); 
-            padding: 12px 16px; 
-            border-radius: 10px; 
-            font-size: 0.85rem; 
-            margin-bottom: 20px; 
-            border: 1px solid var(--border-color);
+        .stats-pill {
             display: flex;
-            justify-content: space-between;
+            gap: 10px;
+            font-family: 'DM Mono', monospace;
+            font-size: 0.72rem;
+            color: var(--muted);
+            background: var(--elevated);
+            border-radius: 20px;
+            padding: 5px 10px;
+        }
+
+        .stats-pill .w { color: var(--green); }
+        .stats-pill .l { color: var(--red); }
+
+        /* Announcement bar */
+        .announcement-bar {
+            padding: 10px 20px;
+            font-size: 0.85rem;
+            color: var(--muted);
+            border-bottom: 1px solid var(--border);
+            min-height: 40px;
+            display: flex;
             align-items: center;
-        }
-        .stats-row { display: flex; gap: 12px; font-weight: 600; }
-        .stat-val { color: var(--accent-green); }
-        
-        /* Immersive video theater box */
-        #video-container { 
-            width: 100%; 
-            height: 380px; 
-            background: #111214; 
-            border-radius: 12px; 
-            margin: 18px 0; 
-            overflow: hidden; 
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.7);
+            gap: 8px;
+            flex-shrink: 0;
+            transition: color 0.3s;
         }
 
-        /* Essential layouts forced when browser enters Fullscreen Mode */
-        #video-container:fullscreen {
-            border-radius: 0 !important;
-            margin: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
-        }
-        #video-container:-webkit-full-screen {
-            border-radius: 0 !important;
-            margin: 0 !important;
-            width: 100vw !important;
-            height: 100vh !important;
+        .announcement-bar.highlight {
+            color: var(--text);
         }
 
-        /* Picture-in-Picture Mini-Floating Frame styling */
-        .pip-mode {
-            position: fixed !important;
-            bottom: 20px;
-            right: 16px;
-            width: 140px !important;
-            height: 200px !important;
-            z-index: 9999;
-            border: 2px solid var(--accent-red) !important;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.8) !important;
-            border-radius: 12px !important;
-            overflow: hidden;
-            pointer-events: auto;
-            background: #111214;
-        }
-        
-        /* Modernized Target Cards */
-        .player-card { 
-            background: rgba(255, 255, 255, 0.03); 
-            padding: 14px 16px; 
-            margin-bottom: 8px; 
-            border-radius: 10px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-            border: 1px solid var(--border-color); 
-            cursor: pointer; 
-            transition: all 0.2s ease;
-        }
-        .player-card:hover { 
-            border-color: rgba(255, 51, 68, 0.4); 
-            background: rgba(255, 255, 255, 0.06); 
-            transform: scale(1.01);
-        }
-        .player-card.voted-by-me {
-            border-color: var(--accent-gold);
-            background: rgba(241, 196, 15, 0.08);
-        }
-        .player-card .name-wrapper {
+        /* Role chip — always visible during game */
+        .role-chip {
+            margin: 12px 20px 0;
+            border-radius: var(--radius-sm);
+            padding: 12px 16px;
             display: flex;
             align-items: center;
             gap: 10px;
-            font-weight: 500;
-        }
-        .host-tag {
-            font-size: 0.7rem;
-            background: rgba(241, 196, 15, 0.15);
-            color: var(--accent-gold);
-            padding: 2px 8px;
-            border-radius: 20px;
-        }
-        .you-tag {
-            font-size: 0.7rem;
-            background: rgba(0, 188, 140, 0.15);
-            color: var(--accent-blue);
-            padding: 2px 8px;
-            border-radius: 20px;
-        }
-        .dead { 
-            background: rgba(0, 0, 0, 0.2) !important; 
-            opacity: 0.3; 
-            border-color: transparent !important; 
-            cursor: not-allowed !important; 
-            text-decoration: line-through; 
-            color: var(--text-muted); 
-        }
-        .dead:hover { transform: none; }
-
-        .vote-badge { 
-            background: var(--accent-red); 
-            padding: 4px 10px; 
-            border-radius: 20px; 
-            font-size: 0.75rem; 
-            font-weight: 700; 
-            box-shadow: 0 2px 6px rgba(255, 51, 68, 0.3);
-        }
-        
-        /* Dynamic Status & Phase Banners */
-        .status-banner { 
-            padding: 14px; 
-            font-weight: 700; 
-            text-align: center; 
-            font-size: 1.1rem; 
-            border-radius: 10px; 
-            margin-bottom: 16px; 
-            letter-spacing: 0.5px;
-            border: 1px solid transparent;
-        }
-        .night-theme { 
-            background: rgba(255, 0, 85, 0.06); 
-            border-color: rgba(255, 0, 85, 0.3); 
-            color: #ff3377; 
-            box-shadow: 0 0 15px rgba(255,0,85,0.1); 
-        }
-        .day-theme { 
-            background: rgba(243, 156, 18, 0.08); 
-            border-color: rgba(243, 156, 18, 0.3); 
-            color: #f39c12; 
-        }
-        .lobby-theme {
-            background: rgba(255, 255, 255, 0.04);
-            border-color: var(--border-color);
-            color: var(--text-muted);
-        }
-        .ended-theme {
-            background: rgba(0, 230, 153, 0.08);
-            border-color: rgba(0, 230, 153, 0.3);
-            color: var(--accent-green);
+            flex-shrink: 0;
         }
 
-        .news-banner { 
-            background: rgba(255, 255, 255, 0.03); 
-            border-left: 4px solid var(--accent-red); 
-            padding: 14px; 
-            margin: 16px 0; 
-            font-size: 0.9rem;
-            line-height: 1.4;
-            color: #e5e7eb;
-            border-radius: 0 10px 10px 0; 
-        }
-        
-        /* Secret Role View Card */
-        .role-box { 
-            padding: 16px; 
-            margin-top: 12px; 
-            border-radius: 10px; 
-            font-weight: 800; 
-            text-align: center; 
-            font-size: 1.3rem; 
-            letter-spacing: 1px;
-            text-shadow: 0 2px 4px rgba(0,0,0,0.5); 
-            border: 1px solid transparent;
-        }
-        .mafia { background: rgba(128, 12, 18, 0.6); border-color: rgba(255, 30, 39, 0.4); color: #ff4d54; }
-        .civilian { background: rgba(19, 95, 56, 0.5); border-color: rgba(30, 215, 96, 0.4); color: #2ecc71; }
-
-        .role-hint {
-            font-size: 0.8rem;
-            color: var(--text-muted);
-            text-align: center;
-            margin-top: 8px;
-            font-weight: 400;
-            letter-spacing: normal;
-            text-shadow: none;
-        }
-        
-        .timer-badge { 
-            font-size: 2.8rem; 
-            text-align: center; 
-            font-weight: 800; 
-            margin: 12px 0; 
-            color: var(--accent-gold); 
-            font-variant-numeric: tabular-nums;
-            text-shadow: 0 2px 10px rgba(241, 196, 15, 0.2);
+        .role-chip.mafia {
+            background: var(--red-dim);
+            border: 1px solid rgba(255,68,88,0.2);
         }
 
-        .game-over-banner {
-            text-align: center;
-            font-size: 1.1rem;
+        .role-chip.civilian {
+            background: var(--green-dim);
+            border: 1px solid rgba(62,255,168,0.2);
+        }
+
+        .role-chip-icon { font-size: 1.3rem; }
+
+        .role-chip-text { flex: 1; }
+        .role-chip-name {
+            font-size: 0.95rem;
             font-weight: 700;
-            padding: 16px;
-            border-radius: 10px;
-            background: rgba(0, 230, 153, 0.08);
-            border: 1px solid rgba(0, 230, 153, 0.3);
-            color: var(--accent-green);
-            margin-bottom: 16px;
+            letter-spacing: 0.5px;
         }
+        .role-chip.mafia .role-chip-name { color: var(--red); }
+        .role-chip.civilian .role-chip-name { color: var(--green); }
+
+        .role-chip-hint {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 1px;
+        }
+
+        /* Player list */
+        .players-section {
+            flex: 1;
+            overflow-y: auto;
+            padding: 14px 20px;
+        }
+
+        .section-label {
+            font-size: 0.7rem;
+            font-weight: 600;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 10px;
+        }
+
+        .player-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            list-style: none;
+        }
+
+        .player-card {
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: var(--radius);
+            padding: 14px 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            cursor: default;
+            transition: all 0.18s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .player-card.votable {
+            cursor: pointer;
+        }
+
+        .player-card.votable:active {
+            transform: scale(0.98);
+        }
+
+        .player-card.my-target {
+            border-color: var(--accent);
+            background: var(--accent-dim);
+        }
+
+        .player-card.mafia-target {
+            border-color: var(--red);
+            background: var(--red-dim);
+        }
+
+        .player-card.dead {
+            opacity: 0.3;
+            border-color: transparent;
+            cursor: not-allowed;
+        }
+
+        .player-card.reconnecting {
+            opacity: 0.5;
+            border-style: dashed;
+        }
+
+        .player-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--elevated);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+            font-weight: 700;
+            color: var(--muted);
+            flex-shrink: 0;
+            letter-spacing: -0.5px;
+        }
+
+        .player-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .player-name {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            font-size: 0.65rem;
+            font-weight: 600;
+            padding: 2px 7px;
+            border-radius: 20px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .tag-you { background: var(--accent-dim); color: var(--accent); }
+        .tag-host { background: var(--gold-dim); color: var(--gold); }
+        .tag-dead { background: rgba(255,255,255,0.06); color: var(--muted); }
+        .tag-reconnecting { background: var(--red-dim); color: var(--red); }
+
+        .player-status {
+            font-size: 0.75rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .player-actions {
+            display: flex;
+            gap: 6px;
+            flex-shrink: 0;
+        }
+
+        .vote-bar {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 2px;
+            background: var(--accent);
+            transition: width 0.4s ease;
+            border-radius: 0 2px 0 0;
+        }
+
+        .vote-bar.mafia-bar { background: var(--red); }
+
+        .vote-count {
+            font-family: 'DM Mono', monospace;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--accent);
+            background: var(--accent-dim);
+            border-radius: 20px;
+            padding: 3px 9px;
+            flex-shrink: 0;
+        }
+
+        .vote-count.mafia-count {
+            color: var(--red);
+            background: var(--red-dim);
+        }
+
+        /* Bottom action zone */
+        .action-zone {
+            padding: 14px 20px 28px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-shrink: 0;
+            background: var(--bg);
+        }
+
+        .action-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-row .btn { flex: 1; }
+
+        /* Video container */
+        #video-container {
+            position: fixed;
+            bottom: 100px;
+            right: 16px;
+            width: 130px;
+            height: 180px;
+            border-radius: var(--radius);
+            overflow: hidden;
+            border: 1.5px solid var(--accent);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.6), 0 0 20px var(--accent-glow);
+            z-index: 100;
+            background: var(--surface);
+            display: none;
+        }
+
+        #video-container.active { display: block; }
+
+        #video-container:fullscreen,
+        #video-container:-webkit-full-screen {
+            width: 100vw !important;
+            height: 100vh !important;
+            border-radius: 0 !important;
+            right: 0 !important;
+            bottom: 0 !important;
+        }
+
+        /* ─── ROLE REVEAL OVERLAY ─── */
+        #role-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(8,9,12,0.97);
+            z-index: 500;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+            padding: 40px 32px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.4s ease;
+        }
+
+        #role-overlay.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .role-reveal-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--muted);
+            font-weight: 600;
+        }
+
+        .role-reveal-icon {
+            font-size: 4rem;
+            line-height: 1;
+        }
+
+        .role-reveal-name {
+            font-size: 2.8rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .role-reveal-name.mafia { color: var(--red); }
+        .role-reveal-name.civilian { color: var(--green); }
+
+        .role-reveal-hint {
+            font-size: 0.95rem;
+            color: var(--muted);
+            text-align: center;
+            line-height: 1.5;
+            max-width: 260px;
+        }
+
+        .role-reveal-dismiss {
+            font-size: 0.8rem;
+            color: var(--muted);
+            margin-top: 8px;
+            animation: blink 1.5s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 1; }
+        }
+
+        /* ─── LOBBY (pre-game) ─── */
+        #lobby-section {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px 20px 0;
+        }
+
+        .lobby-hero {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 20px;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+
+        .lobby-hero-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 4px;
+        }
+
+        .lobby-hero-sub {
+            font-size: 0.85rem;
+            color: var(--muted);
+        }
+
+        .player-count-ring {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: var(--elevated);
+            border: 2px solid var(--accent);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin: 16px auto;
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .player-count-num {
+            font-family: 'DM Mono', monospace;
+            font-size: 1.6rem;
+            font-weight: 500;
+            color: var(--accent);
+            line-height: 1;
+        }
+
+        .player-count-label {
+            font-size: 0.6rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* ─── GAME OVER ─── */
+        .game-over-banner {
+            margin: 0 20px 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px 20px;
+            text-align: center;
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text);
+            display: none;
+        }
+
+        .game-over-banner.visible { display: block; }
+
+        /* ─── SCROLLBAR ─── */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: var(--elevated); border-radius: 4px; }
+
+        /* ─── PULSE RING (round indicator) ─── */
+        .pulse-ring {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--accent);
+            box-shadow: 0 0 0 0 var(--accent-glow);
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 var(--accent-glow); }
+            70% { box-shadow: 0 0 0 10px rgba(201,240,255,0); }
+            100% { box-shadow: 0 0 0 0 rgba(201,240,255,0); }
+        }
+
+        /* ─── RECORD STATUS ─── */
+        .record-status {
+            font-size: 0.78rem;
+            color: var(--muted);
+            text-align: center;
+            padding: 0 4px;
+            display: none;
+        }
+
+        .record-status.visible { display: block; }
     </style>
 </head>
 <body>
 
-    <div class="app-container">
-        <header style="display:flex; justify-content:space-between; align-items:center; margin-bottom: 20px;">
-            <h1>🕵️‍♂️ Mafia Platform <span class="version-pill">v4.0</span></h1>
-        </header>
-        
-        <div id="profile-panel" class="profile-badge hidden">
-            <span>📊 Profile Identity</span>
-            <div class="stats-row">
-                <div>W: <span id="stat-wins" class="stat-val">0</span></div>
-                <div>L: <span id="stat-losses" style="color:var(--accent-red);">0</span></div>
-                <div>Total: <span id="stat-total" style="color:var(--accent-gold);">0</span></div>
-            </div>
+<!-- ═══ JOIN SCREEN ═══ -->
+<div id="join-screen" class="screen">
+    <div class="join-inner">
+        <div class="join-title">Mafia<span>.</span></div>
+        <div class="join-sub">Social deduction. Real stakes.</div>
+
+        <div class="field">
+            <label for="username">Your handle</label>
+            <input type="text" id="username" placeholder="e.g. Ghost" maxlength="20" autocomplete="off">
         </div>
-
-        <div id="join-screen">
-            <div class="input-group">
-                <label for="username">Player Handle</label>
-                <input type="text" id="username" placeholder="e.g., Operative" maxlength="20" required>
-            </div>
-            <div class="input-group">
-                <label for="room-id">Secure Room ID</label>
-                <input type="text" id="room-id" placeholder="e.g., AlphaCode" maxlength="20" required>
-            </div>
-            <button id="join-btn" style="margin-top: 10px;">Establish Connection</button>
+        <div class="field">
+            <label for="room-id">Room code</label>
+            <input type="text" id="room-id" placeholder="e.g. Alpha7" maxlength="20" autocomplete="off">
         </div>
+        <button class="btn btn-primary" id="join-btn">Join Room</button>
+    </div>
+</div>
 
-        <div id="lobby-screen" class="hidden">
-            <div id="phase-banner" class="status-banner lobby-theme">Lobby Waiting</div>
-            <div id="timer" class="timer-badge hidden">--</div>
-            <div id="news-feed" class="news-banner hidden"></div>
-            <div id="game-over-banner" class="game-over-banner hidden"></div>
-            <button id="restart-btn" class="hidden" style="background-color: var(--accent-green); color: #0a0b0e; margin-bottom: 16px;">
-                🔁 Restart Game
-            </button>
+<!-- ═══ GAME SCREEN ═══ -->
+<div id="game-screen" class="screen hidden">
 
-            <button id="init-video-btn" class="hidden" style="background-color: var(--accent-blue); margin-bottom: 12px;">
-                🎥 Connect Video Feed
-            </button>
-            <div id="video-container" class="hidden"></div>
-            <button id="record-btn" class="hidden" style="background-color: var(--accent-gold); color: #1a1a1a; margin-bottom: 8px;">
-                ⏺️ Record My Camera & Mic
-            </button>
-            <p id="record-status" class="hidden" style="color: var(--text-muted); text-align:center; font-size:0.85rem; margin: -4px 0 12px;"></p>
-
-            <div style="display:flex; justify-content:space-between; align-items:center; margin: 20px 0 10px;">
-                <h2 style="margin:0;">Room: <span id="display-room" style="color:var(--accent-red);"></span></h2>
+    <!-- Top bar -->
+    <div class="top-bar">
+        <div class="top-bar-left">
+            <div class="room-label">Room</div>
+            <div class="room-name" id="display-room">—</div>
+        </div>
+        <div class="top-bar-right">
+            <div class="round-badge" id="round-badge" style="display:none">
+                <span class="pulse-ring"></span>&nbsp; Round <span id="round-num">1</span>
             </div>
-
-            <div id="role-reveal" class="hidden">
-                <h3>Tactical Clearance Assigned:</h3>
-                <div id="role-card" class="role-box"></div>
-            </div>
-            
-            <h3 style="margin-top:20px;">Target Control Board (Tap to Vote):</h3>
-            <ul id="player-list"></ul>
-            
-            <div style="margin-top: 20px;">
-                <button id="start-btn" class="hidden">Launch Operations</button>
-                <p id="wait-message" class="hidden" style="color: var(--text-muted); text-align:center; font-size:0.9rem; font-style:italic; margin:0;">
-                    Awaiting authorization from Room Host...
-                </p>
+            <div class="stats-pill">
+                <span class="w">W <span id="stat-wins">0</span></span>
+                <span class="l">L <span id="stat-losses">0</span></span>
             </div>
         </div>
     </div>
 
-    <script src="/socket.io/socket.io.js"></script>
-    <script>
-        const socket = io();
-        let jitsiApi = null;
+    <!-- Announcement bar -->
+    <div class="announcement-bar" id="announcement-bar">
+        Waiting for players...
+    </div>
 
-        const joinScreen = document.getElementById('join-screen');
-        const lobbyScreen = document.getElementById('lobby-screen');
-        const joinBtn = document.getElementById('join-btn');
-        const startBtn = document.getElementById('start-btn');
-        const waitMessage = document.getElementById('wait-message');
-        const usernameInput = document.getElementById('username');
-        const roomIdInput = document.getElementById('room-id');
-        const displayRoom = document.getElementById('display-room');
-        const playerList = document.getElementById('player-list');
-        const roleReveal = document.getElementById('role-reveal');
-        const roleCard = document.getElementById('role-card');
-        const phaseBanner = document.getElementById('phase-banner');
-        const timerDisplay = document.getElementById('timer');
-        const newsFeed = document.getElementById('news-feed');
-        const gameOverBanner = document.getElementById('game-over-banner');
-        const restartBtn = document.getElementById('restart-btn');
-        const profilePanel = document.getElementById('profile-panel');
-        const statWins = document.getElementById('stat-wins');
-        const statLosses = document.getElementById('stat-losses');
-        const statTotal = document.getElementById('stat-total');
-        const videoContainer = document.getElementById('video-container');
-        const initVideoBtn = document.getElementById('init-video-btn');
-        const recordBtn = document.getElementById('record-btn');
-        const recordStatus = document.getElementById('record-status');
+    <!-- Game over banner -->
+    <div class="game-over-banner" id="game-over-banner"></div>
 
-        let currentRoom = "";
-        let myUsername = "";
-        let myId = null;
-        let amIHost = false;
-        let amIAlive = true;
-        let myRole = null; // null until assigned
-        let currentPhase = "lobby";
-        let lastUsers = [];
-        let lastVotes = {};
-        let currentHostId = null;
+    <!-- Role chip (shown during active game) -->
+    <div class="role-chip hidden" id="role-chip">
+        <div class="role-chip-icon" id="role-chip-icon"></div>
+        <div class="role-chip-text">
+            <div class="role-chip-name" id="role-chip-name"></div>
+            <div class="role-chip-hint" id="role-chip-hint"></div>
+        </div>
+    </div>
 
-        // Recording state — captures this player's own camera/mic only,
-        // saved locally to their device. Does not record other participants.
-        let mediaRecorder = null;
-        let recordedChunks = [];
-        let isRecording = false;
-        let recordingStream = null;
+    <!-- Lobby section (pre-game) -->
+    <div id="lobby-section">
+        <div class="lobby-hero">
+            <div class="lobby-hero-title">Waiting for host</div>
+            <div class="lobby-hero-sub">Share your room code with friends</div>
+            <div class="player-count-ring">
+                <div class="player-count-num" id="player-count">1</div>
+                <div class="player-count-label">players</div>
+            </div>
+        </div>
+        <div class="section-label">In this room</div>
+        <ul class="player-list" id="lobby-player-list"></ul>
+    </div>
 
-        // ---------- Joining ----------
+    <!-- Players section (during game) -->
+    <div class="players-section hidden" id="players-section">
+        <div class="section-label" id="vote-section-label">Tap a player to vote</div>
+        <ul class="player-list" id="player-list"></ul>
+    </div>
 
-        joinBtn.addEventListener('click', attemptJoin);
-        usernameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') attemptJoin(); });
-        roomIdInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') attemptJoin(); });
+    <!-- Action zone -->
+    <div class="action-zone">
+        <div id="record-status" class="record-status"></div>
 
-        function attemptJoin() {
-            const username = usernameInput.value ? usernameInput.value.trim() : "";
-            const room = roomIdInput.value ? roomIdInput.value.trim() : "";
-            
-            if (username && room) {
-                currentRoom = room;
-                myUsername = username;
-                socket.emit('joinRoom', { username, room });
-                
-                window.history.pushState({ panel: "lobby" }, "");
-                showLobbyUI();
-            } else {
-                alert("Please enter both a Player Handle and a Secure Room ID.");
-            }
+        <!-- Video + record row -->
+        <div class="action-row" id="video-row">
+            <button class="btn btn-ghost" id="video-btn">🎥 Join Video</button>
+            <button class="btn btn-ghost hidden" id="record-btn">⏺ Record</button>
+        </div>
+
+        <!-- Host controls -->
+        <div id="host-controls" class="hidden">
+            <button class="btn btn-primary" id="start-btn">Launch Game</button>
+            <div class="action-row" id="host-game-controls" style="display:none">
+                <button class="btn btn-danger" id="end-round-btn">End Round</button>
+                <button class="btn btn-ghost" id="restart-btn">↺ Restart</button>
+            </div>
+        </div>
+
+        <!-- Player waiting message -->
+        <div id="wait-message" class="hidden" style="text-align:center; font-size:0.85rem; color:var(--muted); padding:4px 0;">
+            Waiting for the host to start...
+        </div>
+    </div>
+</div>
+
+<!-- ═══ ROLE REVEAL OVERLAY ═══ -->
+<div id="role-overlay">
+    <div class="role-reveal-label">Your role</div>
+    <div class="role-reveal-icon" id="reveal-icon"></div>
+    <div class="role-reveal-name" id="reveal-name"></div>
+    <div class="role-reveal-hint" id="reveal-hint"></div>
+    <div class="role-reveal-dismiss">Tap anywhere to continue</div>
+</div>
+
+<!-- Video container (PiP) -->
+<div id="video-container"></div>
+
+<script src="/socket.io/socket.io.js"></script>
+<script>
+    const socket = io();
+    let jitsiApi = null;
+    let mediaRecorder = null;
+    let recordedChunks = [];
+    let isRecording = false;
+    let recordingStream = null;
+
+    // State
+    let myId = null;
+    let myUsername = '';
+    let currentRoom = '';
+    let amIHost = false;
+    let amIAlive = true;
+    let myRole = null;
+    let gameStarted = false;
+    let currentRound = 0;
+    let lastUsers = [];
+    let lastVotes = {};
+    let lastMafiaVotes = {};
+    let currentHostId = null;
+    let totalAlive = 0;
+    let _myVoteTarget = null;
+    let _myMafiaVoteTarget = null;
+
+    // Elements
+    const joinScreen = document.getElementById('join-screen');
+    const gameScreen = document.getElementById('game-screen');
+    const usernameInput = document.getElementById('username');
+    const roomIdInput = document.getElementById('room-id');
+    const joinBtn = document.getElementById('join-btn');
+    const displayRoom = document.getElementById('display-room');
+    const roundBadge = document.getElementById('round-badge');
+    const roundNum = document.getElementById('round-num');
+    const statWins = document.getElementById('stat-wins');
+    const statLosses = document.getElementById('stat-losses');
+    const announcementBar = document.getElementById('announcement-bar');
+    const gameOverBanner = document.getElementById('game-over-banner');
+    const roleChip = document.getElementById('role-chip');
+    const roleChipIcon = document.getElementById('role-chip-icon');
+    const roleChipName = document.getElementById('role-chip-name');
+    const roleChipHint = document.getElementById('role-chip-hint');
+    const lobbySection = document.getElementById('lobby-section');
+    const playersSection = document.getElementById('players-section');
+    const playerCount = document.getElementById('player-count');
+    const lobbyPlayerList = document.getElementById('lobby-player-list');
+    const playerList = document.getElementById('player-list');
+    const voteSectionLabel = document.getElementById('vote-section-label');
+    const recordStatus = document.getElementById('record-status');
+    const videoBtn = document.getElementById('video-btn');
+    const recordBtn = document.getElementById('record-btn');
+    const hostControls = document.getElementById('host-controls');
+    const startBtn = document.getElementById('start-btn');
+    const hostGameControls = document.getElementById('host-game-controls');
+    const endRoundBtn = document.getElementById('end-round-btn');
+    const restartBtn = document.getElementById('restart-btn');
+    const waitMessage = document.getElementById('wait-message');
+    const roleOverlay = document.getElementById('role-overlay');
+    const revealIcon = document.getElementById('reveal-icon');
+    const revealName = document.getElementById('reveal-name');
+    const revealHint = document.getElementById('reveal-hint');
+    const videoContainer = document.getElementById('video-container');
+
+    // ── JOIN ──
+    joinBtn.addEventListener('click', attemptJoin);
+    usernameInput.addEventListener('keydown', e => { if (e.key === 'Enter') roomIdInput.focus(); });
+    roomIdInput.addEventListener('keydown', e => { if (e.key === 'Enter') attemptJoin(); });
+
+    function attemptJoin() {
+        const username = usernameInput.value.trim();
+        const room = roomIdInput.value.trim();
+        if (!username || !room) { alert('Enter both a handle and a room code.'); return; }
+        myUsername = username;
+        currentRoom = room;
+        socket.emit('joinRoom', { username, room });
+        showGameScreen();
+    }
+
+    function showGameScreen() {
+        joinScreen.classList.add('hidden');
+        gameScreen.classList.remove('hidden');
+        displayRoom.innerText = currentRoom;
+    }
+
+    // ── SOCKET EVENTS ──
+    socket.on('connect', () => {
+        const wasReconnect = myId !== null;
+        myId = socket.id;
+        if (wasReconnect && currentRoom && myUsername) {
+            socket.emit('joinRoom', { username: myUsername, room: currentRoom });
         }
+    });
 
-        function showLobbyUI() {
-            joinScreen.classList.add('hidden');
-            lobbyScreen.classList.remove('hidden');
-            profilePanel.classList.remove('hidden');
-            displayRoom.innerText = currentRoom;
-            initVideoBtn.classList.remove('hidden');
-        }
+    socket.on('disconnect', () => {
+        if (currentRoom) announce('Connection lost — reconnecting...', false);
+    });
 
-        // ---------- Socket event handlers ----------
-
-        socket.on('connect', () => {
-            const wasReconnect = myId !== null;
-            myId = socket.id;
-
-            // Socket.io reconnects get a brand new socket id, so if we were
-            // already in a room, re-announce ourselves so the server can
-            // match us by username and restore our seat.
-            if (wasReconnect && currentRoom && myUsername) {
-                socket.emit('joinRoom', { username: myUsername, room: currentRoom });
-            }
-        });
-
-        socket.on('disconnect', () => {
-            if (currentRoom) {
-                newsFeed.innerText = "📡 Connection lost — trying to reconnect...";
-                newsFeed.classList.remove('hidden');
-            }
-        });
-
-        socket.on('rejoined', ({ role, alive, phase }) => {
-            myRole = role;
-            amIAlive = alive;
-            currentPhase = phase;
-            newsFeed.innerText = "✅ Reconnected — you're back in the game.";
-            newsFeed.classList.remove('hidden');
-            updatePhaseBanner();
-            if (role) {
-                roleReveal.classList.remove('hidden');
-                roleCard.className = 'role-box ' + role;
-                roleCard.innerHTML = role === 'mafia'
-                    ? '🔪 MAFIA' + '<div class="role-hint">Eliminate civilians during the night. Blend in during the day.</div>'
-                    : '🛡️ CIVILIAN' + '<div class="role-hint">Find and vote out the mafia before they take over.</div>';
-            }
-        });
-
-        socket.on('joinRejected', ({ reason }) => {
-            if (reason === 'username-taken') {
-                alert(`The handle "${myUsername}" is already active in that room. Try a different handle.`);
-                lobbyScreen.classList.add('hidden');
-                profilePanel.classList.add('hidden');
-                joinScreen.classList.remove('hidden');
-                currentRoom = "";
-            }
-        });
-
-        socket.on('kicked', () => {
-            alert("You were removed from the room by the host.");
-            currentRoom = "";
-            lobbyScreen.classList.add('hidden');
-            profilePanel.classList.add('hidden');
+    socket.on('joinRejected', ({ reason }) => {
+        if (reason === 'username-taken') {
+            alert(`"${myUsername}" is already in use in that room. Try a different handle.`);
             joinScreen.classList.remove('hidden');
-            if (jitsiApi) {
-                jitsiApi.dispose();
-                jitsiApi = null;
-            }
-        });
+            gameScreen.classList.add('hidden');
+            currentRoom = '';
+        }
+    });
 
-        socket.on('gameReset', () => {
-            myRole = null;
-            amIAlive = true;
-            currentPhase = 'lobby';
-            roleReveal.classList.add('hidden');
-            gameOverBanner.classList.add('hidden');
-            timerDisplay.classList.add('hidden');
-            updateHostControls();
-        });
+    socket.on('isHost', () => {
+        amIHost = true;
+        updateControls();
+    });
 
-        socket.on('profileUpdate', (profile) => {
-            statWins.innerText = profile.wins;
-            statLosses.innerText = profile.losses;
-            statTotal.innerText = profile.gamesPlayed;
-        });
+    socket.on('isPlayer', () => {
+        amIHost = false;
+        updateControls();
+    });
 
-        socket.on('isHost', () => {
-            amIHost = true;
-            updateHostControls();
-        });
+    socket.on('profileUpdate', ({ wins, losses }) => {
+        statWins.innerText = wins;
+        statLosses.innerText = losses;
+    });
 
-        socket.on('isPlayer', () => {
-            amIHost = false;
-            updateHostControls();
-        });
+    socket.on('roomUsers', ({ users, hostId }) => {
+        lastUsers = users;
+        currentHostId = hostId;
+        const me = users.find(u => u.id === myId);
+        if (me) amIAlive = me.alive;
+        totalAlive = users.filter(u => u.alive && !u.disconnected).length;
+        renderPlayers();
+        updateControls();
+    });
 
-        socket.on('roomUsers', ({ users, hostId }) => {
-            lastUsers = users;
-            if (hostId) currentHostId = hostId;
-            const me = users.find(u => u.id === myId);
-            if (me) amIAlive = me.alive;
-            renderPlayerList();
-            updateHostControls();
-        });
+    socket.on('assignRole', role => {
+        myRole = role;
+        showRoleReveal(role);
+        updateRoleChip();
+    });
 
-        socket.on('assignRole', (role) => {
-            myRole = role;
-            roleReveal.classList.remove('hidden');
-            roleCard.className = 'role-box ' + role;
-            if (role === 'mafia') {
-                roleCard.innerHTML = '🔪 MAFIA' + '<div class="role-hint">Eliminate civilians during the night. Blend in during the day.</div>';
-            } else {
-                roleCard.innerHTML = '🛡️ CIVILIAN' + '<div class="role-hint">Find and vote out the mafia before they take over.</div>';
-            }
-        });
+    socket.on('gameStarted', ({ round }) => {
+        gameStarted = true;
+        currentRound = round;
+        lobbySection.classList.add('hidden');
+        playersSection.classList.remove('hidden');
+        roleChip.classList.remove('hidden');
+        roundBadge.style.display = 'flex';
+        roundNum.innerText = round;
+        hostGameControls.style.display = 'flex';
+        startBtn.style.display = 'none';
+        updateControls();
+        announce('Game started — round 1 begins.');
+    });
 
-        socket.on('gameStarted', () => {
-            startBtn.classList.add('hidden');
+    socket.on('roundStarted', ({ round }) => {
+        currentRound = round;
+        roundNum.innerText = round;
+        lastVotes = {};
+        lastMafiaVotes = {};
+        _myVoteTarget = null;
+        _myMafiaVoteTarget = null;
+        renderPlayers();
+        announce(`Round ${round} — discuss and vote.`);
+    });
+
+    socket.on('voteUpdate', votes => {
+        lastVotes = votes;
+        renderPlayers();
+    });
+
+    socket.on('mafiaVoteUpdate', votes => {
+        lastMafiaVotes = votes;
+        renderPlayers();
+    });
+
+    socket.on('announcement', msg => announce(msg, true));
+
+    socket.on('eliminated', () => {
+        amIAlive = false;
+        updateRoleChip();
+    });
+
+    socket.on('rejoined', ({ role, alive }) => {
+        myRole = role;
+        amIAlive = alive;
+        announce('You reconnected successfully.', false);
+        updateRoleChip();
+        if (gameStarted) {
+            lobbySection.classList.add('hidden');
+            playersSection.classList.remove('hidden');
+            roleChip.classList.remove('hidden');
+        }
+    });
+
+    socket.on('kicked', () => {
+        alert('You were removed from the room by the host.');
+        currentRoom = '';
+        gameScreen.classList.add('hidden');
+        joinScreen.classList.remove('hidden');
+        if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
+    });
+
+    socket.on('gameOver', msg => {
+        gameStarted = false;
+        gameOverBanner.innerText = msg;
+        gameOverBanner.classList.add('visible');
+        announce(msg, true);
+        hostGameControls.style.display = 'none';
+        if (amIHost) startBtn.style.display = 'block';
+        updateControls();
+    });
+
+    socket.on('gameReset', () => {
+        gameStarted = false;
+        myRole = null;
+        amIAlive = true;
+        currentRound = 0;
+        lastVotes = {};
+        lastMafiaVotes = {};
+        gameOverBanner.classList.remove('visible');
+        roleChip.classList.add('hidden');
+        playersSection.classList.add('hidden');
+        lobbySection.classList.remove('hidden');
+        roundBadge.style.display = 'none';
+        hostGameControls.style.display = 'none';
+        startBtn.style.display = 'block';
+        announce('Game reset — back to lobby.', false);
+        updateControls();
+    });
+
+    // ── RENDERING ──
+    function announce(msg, highlight = false) {
+        announcementBar.innerText = msg;
+        announcementBar.classList.toggle('highlight', highlight);
+    }
+
+    function updateRoleChip() {
+        if (!myRole || !gameStarted) { roleChip.classList.add('hidden'); return; }
+        roleChip.classList.remove('hidden');
+        roleChip.className = `role-chip ${myRole}`;
+        if (myRole === 'mafia') {
+            roleChipIcon.innerText = '🔪';
+            roleChipName.innerText = 'MAFIA';
+            roleChipHint.innerText = amIAlive
+                ? 'Vote secretly to eliminate a civilian each round.'
+                : 'You were eliminated.';
+        } else {
+            roleChipIcon.innerText = '🛡';
+            roleChipName.innerText = 'CIVILIAN';
+            roleChipHint.innerText = amIAlive
+                ? 'Vote to expose the mafia before they take over.'
+                : 'You were eliminated.';
+        }
+    }
+
+    function updateControls() {
+        if (amIHost) {
+            hostControls.classList.remove('hidden');
             waitMessage.classList.add('hidden');
-            gameOverBanner.classList.add('hidden');
+            if (!gameStarted) {
+                const count = lastUsers.filter(u => !u.disconnected).length;
+                startBtn.disabled = count < 3;
+                startBtn.innerText = count < 3 ? `Need ${3 - count} more player(s)` : 'Launch Game';
+                startBtn.style.display = 'block';
+                hostGameControls.style.display = 'none';
+            }
+        } else {
+            hostControls.classList.add('hidden');
+            waitMessage.classList.toggle('hidden', gameStarted);
+        }
+    }
+
+    function renderPlayers() {
+        // Lobby list
+        playerCount.innerText = lastUsers.length;
+        lobbyPlayerList.innerHTML = '';
+        lastUsers.forEach(u => {
+            const li = document.createElement('li');
+            li.className = 'player-card';
+            li.innerHTML = `
+                <div class="player-avatar">${u.username.slice(0,2).toUpperCase()}</div>
+                <div class="player-info">
+                    <div class="player-name">
+                        ${u.username}
+                        ${u.id === myId ? '<span class="tag tag-you">You</span>' : ''}
+                        ${u.id === currentHostId ? '<span class="tag tag-host">Host</span>' : ''}
+                        ${u.disconnected ? '<span class="tag tag-reconnecting">Away</span>' : ''}
+                    </div>
+                </div>
+            `;
+            lobbyPlayerList.appendChild(li);
         });
 
-        socket.on('phaseChange', ({ phase, timeLeft }) => {
-            currentPhase = phase;
-            lastVotes = {};
-            updatePhaseBanner();
-            timerDisplay.classList.remove('hidden');
-            timerDisplay.innerText = timeLeft;
-            renderPlayerList();
+        // Game player list
+        if (!gameStarted) return;
+        playerList.innerHTML = '';
+        const maxVotes = Math.max(1, ...Object.values(lastVotes));
+        const maxMafiaVotes = Math.max(1, ...Object.values(lastMafiaVotes));
+
+        lastUsers.forEach(u => {
+            const li = document.createElement('li');
+            const isDead = !u.alive;
+            const isMe = u.id === myId;
+            const iMyTarget = _myVoteTarget === u.id;
+            const isMafiaTarget = myRole === 'mafia' && _myMafiaVoteTarget === u.id;
+
+            li.className = [
+                'player-card',
+                isDead ? 'dead' : '',
+                u.disconnected ? 'reconnecting' : '',
+                iMyTarget ? 'my-target' : '',
+                isMafiaTarget && !iMyTarget ? 'mafia-target' : '',
+                (!isDead && !isMe && amIAlive && !u.disconnected && gameStarted) ? 'votable' : ''
+            ].join(' ').trim();
+
+            const publicVotes = lastVotes[u.id] || 0;
+            const mafiaVotes = lastMafiaVotes[u.id] || 0;
+
+            li.innerHTML = `
+                <div class="player-avatar">${u.username.slice(0,2).toUpperCase()}</div>
+                <div class="player-info">
+                    <div class="player-name">
+                        ${u.username}
+                        ${isMe ? '<span class="tag tag-you">You</span>' : ''}
+                        ${u.id === currentHostId ? '<span class="tag tag-host">Host</span>' : ''}
+                        ${isDead ? '<span class="tag tag-dead">Out</span>' : ''}
+                        ${u.disconnected ? '<span class="tag tag-reconnecting">Away</span>' : ''}
+                    </div>
+                    ${isDead ? '' : '<div class="player-status">Alive</div>'}
+                </div>
+                ${!isDead && amIHost && !isMe ? `
+                <div class="player-actions">
+                    ${!u.disconnected ? `<button class="btn btn-ghost btn-sm" data-action="makehost" data-id="${u.id}">👑</button>` : ''}
+                    <button class="btn btn-danger btn-sm" data-action="kick" data-id="${u.id}">🚪</button>
+                </div>` : ''}
+                ${publicVotes > 0 ? `<div class="vote-count">${publicVotes}</div>` : ''}
+                ${myRole === 'mafia' && mafiaVotes > 0 ? `<div class="vote-count mafia-count">${mafiaVotes}</div>` : ''}
+                ${publicVotes > 0 ? `<div class="vote-bar" style="width:${(publicVotes/maxVotes)*100}%"></div>` : ''}
+                ${myRole === 'mafia' && mafiaVotes > 0 ? `<div class="vote-bar mafia-bar" style="width:${(mafiaVotes/maxMafiaVotes)*70}%; bottom: 2px"></div>` : ''}
+            `;
+
+            // Vote on tap
+            if (!isDead && !isMe && amIAlive && !u.disconnected) {
+                li.addEventListener('click', (e) => {
+                    if (e.target.closest('[data-action]')) return;
+                    _myVoteTarget = u.id;
+                    if (myRole === 'mafia') _myMafiaVoteTarget = u.id;
+                    socket.emit('castVote', { room: currentRoom, targetId: u.id });
+                    if (myRole === 'mafia') {
+                        socket.emit('castMafiaVote', { room: currentRoom, targetId: u.id });
+                    }
+                    renderPlayers();
+                });
+            }
+
+            // Host buttons
+            li.querySelectorAll('[data-action]').forEach(btn => {
+                btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const action = btn.dataset.action;
+                    const targetId = btn.dataset.id;
+                    if (action === 'kick' && confirm(`Remove ${u.username}?`)) {
+                        socket.emit('kickPlayer', { room: currentRoom, targetId });
+                    }
+                    if (action === 'makehost' && confirm(`Make ${u.username} host?`)) {
+                        socket.emit('transferHost', { room: currentRoom, targetId });
+                    }
+                });
+            });
+
+            playerList.appendChild(li);
         });
 
-        socket.on('timerUpdate', (timeLeft) => {
-            timerDisplay.innerText = timeLeft;
-        });
+        // Update vote section label
+        if (myRole === 'mafia') {
+            voteSectionLabel.innerHTML = 'Tap to vote &mdash; <span style="color:var(--red)">mafia kill shown in red</span>';
+        } else {
+            voteSectionLabel.innerText = 'Tap a player to vote them out';
+        }
+    }
 
-        socket.on('voteUpdate', (votes) => {
-            lastVotes = votes;
-            renderPlayerList();
-        });
+    // ── ROLE REVEAL OVERLAY ──
+    function showRoleReveal(role) {
+        revealIcon.innerText = role === 'mafia' ? '🔪' : '🛡';
+        revealName.className = `role-reveal-name ${role}`;
+        revealName.innerText = role === 'mafia' ? 'MAFIA' : 'CIVILIAN';
+        revealHint.innerText = role === 'mafia'
+            ? 'Secretly eliminate civilians each round. Blend in during group discussion.'
+            : 'Find and expose the mafia before they outnumber you.';
+        roleOverlay.classList.add('visible');
+    }
 
-        socket.on('announcement', (msg) => {
-            newsFeed.innerText = msg;
-            newsFeed.classList.remove('hidden');
-        });
+    roleOverlay.addEventListener('click', () => {
+        roleOverlay.classList.remove('visible');
+    });
 
-        socket.on('eliminated', () => {
-            amIAlive = false;
-        });
+    // ── HOST BUTTONS ──
+    startBtn.addEventListener('click', () => {
+        socket.emit('startGame', currentRoom);
+    });
 
-        socket.on('gameOver', (msg) => {
-            currentPhase = 'ended';
-            updatePhaseBanner();
-            timerDisplay.classList.add('hidden');
-            gameOverBanner.innerText = msg;
-            gameOverBanner.classList.remove('hidden');
-            startBtn.classList.add('hidden');
-            waitMessage.classList.add('hidden');
-            updateHostControls();
-        });
+    endRoundBtn.addEventListener('click', () => {
+        if (confirm('End this round and resolve all votes?')) {
+            socket.emit('endRound', currentRoom);
+        }
+    });
 
-        restartBtn.addEventListener('click', () => {
+    restartBtn.addEventListener('click', () => {
+        if (confirm('Reset the game for everyone?')) {
             socket.emit('restartGame', currentRoom);
-        });
+        }
+    });
 
-        // ---------- Rendering ----------
+    // ── VIDEO ──
+    videoBtn.addEventListener('click', async () => {
+        if (jitsiApi) {
+            // Expand to fullscreen portrait
+            goFullscreen();
+            return;
+        }
+        videoBtn.innerText = '⏳ Connecting...';
+        videoBtn.disabled = true;
+        await initVideo();
+        videoBtn.disabled = false;
+    });
 
-        function updatePhaseBanner() {
-            phaseBanner.classList.remove('night-theme', 'day-theme', 'lobby-theme', 'ended-theme');
-            if (currentPhase === 'night') {
-                phaseBanner.classList.add('night-theme');
-                phaseBanner.innerText = '🌙 Night Phase — Mafia is choosing a target';
-            } else if (currentPhase === 'day') {
-                phaseBanner.classList.add('day-theme');
-                phaseBanner.innerText = '☀️ Day Phase — Discuss and vote';
-            } else if (currentPhase === 'ended') {
-                phaseBanner.classList.add('ended-theme');
-                phaseBanner.innerText = '🏁 Game Over';
-            } else {
-                phaseBanner.classList.add('lobby-theme');
-                phaseBanner.innerText = 'Lobby Waiting';
-            }
+    async function initVideo() {
+        if (typeof JitsiMeetExternalAPI === 'undefined') {
+            announce('Video unavailable — check your connection.', false);
+            videoBtn.innerText = '🎥 Join Video';
+            return;
         }
 
-        function updateHostControls() {
-            if (currentPhase !== 'lobby') {
-                startBtn.classList.add('hidden');
-                waitMessage.classList.add('hidden');
-            } else if (amIHost) {
-                startBtn.classList.remove('hidden');
-                waitMessage.classList.add('hidden');
-                startBtn.disabled = lastUsers.length < 3;
-                startBtn.innerText = lastUsers.length < 3
-                    ? `Need ${3 - lastUsers.length} more operative(s)`
-                    : 'Launch Operations';
-            } else {
-                startBtn.classList.add('hidden');
-                waitMessage.classList.remove('hidden');
-            }
-
-            // Restart button should only ever be visible to the current host,
-            // and only once a game has actually ended.
-            if (!amIHost || currentPhase !== 'ended') {
-                restartBtn.classList.add('hidden');
-            } else {
-                restartBtn.classList.remove('hidden');
-            }
-        }
-
-        function renderPlayerList() {
-            playerList.innerHTML = '';
-
-            // Determine who I'm allowed to vote for
-            const canVote = currentPhase === 'night' || currentPhase === 'day';
-            const nightRestricted = currentPhase === 'night' && myRole !== 'mafia';
-
-            lastUsers.forEach(user => {
-                const li = document.createElement('li');
-                li.className = 'player-card';
-                if (!user.alive) li.classList.add('dead');
-
-                const myCurrentTarget = getMyVoteTarget();
-                if (myCurrentTarget === user.id) li.classList.add('voted-by-me');
-
-                const nameWrapper = document.createElement('div');
-                nameWrapper.className = 'name-wrapper';
-
-                const nameSpan = document.createElement('span');
-                nameSpan.innerText = user.username;
-                nameWrapper.appendChild(nameSpan);
-
-                if (user.id === myId) {
-                    const youTag = document.createElement('span');
-                    youTag.className = 'you-tag';
-                    youTag.innerText = 'YOU';
-                    nameWrapper.appendChild(youTag);
-                }
-
-                if (user.id === currentHostId) {
-                    const hostTag = document.createElement('span');
-                    hostTag.className = 'host-tag';
-                    hostTag.innerText = 'HOST';
-                    nameWrapper.appendChild(hostTag);
-                }
-
-                if (user.disconnected) {
-                    const reconnectTag = document.createElement('span');
-                    reconnectTag.className = 'host-tag';
-                    reconnectTag.style.color = 'var(--accent-red)';
-                    reconnectTag.style.background = 'rgba(255, 51, 68, 0.12)';
-                    reconnectTag.innerText = 'RECONNECTING...';
-                    nameWrapper.appendChild(reconnectTag);
-                }
-
-                li.appendChild(nameWrapper);
-
-                const voteCount = lastVotes[user.id];
-                if (voteCount && voteCount > 0) {
-                    const badge = document.createElement('span');
-                    badge.className = 'vote-badge';
-                    badge.innerText = voteCount;
-                    li.appendChild(badge);
-                }
-
-                // Host-only management controls (kick / make host) — shown for
-                // everyone except the host's own row, and not for someone
-                // already mid-disconnect (nothing useful to transfer to them).
-                if (amIHost && user.id !== myId) {
-                    const controls = document.createElement('div');
-                    controls.style.display = 'flex';
-                    controls.style.gap = '6px';
-
-                    if (!user.disconnected) {
-                        const makeHostBtn = document.createElement('button');
-                        makeHostBtn.innerText = '👑';
-                        makeHostBtn.title = 'Make host';
-                        makeHostBtn.style.width = 'auto';
-                        makeHostBtn.style.padding = '6px 10px';
-                        makeHostBtn.style.fontSize = '0.8rem';
-                        makeHostBtn.style.background = 'rgba(241, 196, 15, 0.15)';
-                        makeHostBtn.style.color = 'var(--accent-gold)';
-                        makeHostBtn.style.boxShadow = 'none';
-                        makeHostBtn.addEventListener('click', (e) => {
-                            e.stopPropagation();
-                            if (confirm(`Make ${user.username} the host?`)) {
-                                socket.emit('transferHost', { room: currentRoom, targetId: user.id });
-                            }
-                        });
-                        controls.appendChild(makeHostBtn);
-                    }
-
-                    const kickBtn = document.createElement('button');
-                    kickBtn.innerText = '🚪';
-                    kickBtn.title = 'Kick player';
-                    kickBtn.style.width = 'auto';
-                    kickBtn.style.padding = '6px 10px';
-                    kickBtn.style.fontSize = '0.8rem';
-                    kickBtn.style.background = 'rgba(255, 51, 68, 0.15)';
-                    kickBtn.style.color = 'var(--accent-red)';
-                    kickBtn.style.boxShadow = 'none';
-                    kickBtn.addEventListener('click', (e) => {
-                        e.stopPropagation();
-                        if (confirm(`Remove ${user.username} from the room?`)) {
-                            socket.emit('kickPlayer', { room: currentRoom, targetId: user.id });
-                        }
-                    });
-                    controls.appendChild(kickBtn);
-
-                    li.appendChild(controls);
-                }
-
-                const clickable = user.alive
-                    && user.id !== myId
-                    && amIAlive
-                    && canVote
-                    && !nightRestricted
-                    && !user.disconnected;
-
-                if (clickable) {
-                    li.addEventListener('click', () => {
-                        socket.emit('castVote', { room: currentRoom, targetId: user.id });
-                    });
-                } else {
-                    li.style.cursor = 'default';
-                }
-
-                playerList.appendChild(li);
+        let tokenData;
+        try {
+            const res = await fetch('/api/video-token', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: myUsername, room: currentRoom, isModerator: amIHost })
             });
+            if (!res.ok) {
+                const err = await res.json().catch(() => ({}));
+                throw new Error(err.error || `Server error ${res.status}`);
+            }
+            tokenData = await res.json();
+        } catch (err) {
+            announce('Video token error: ' + err.message, false);
+            videoBtn.innerText = '🎥 Join Video';
+            return;
         }
 
-        function getMyVoteTarget() {
-            // We don't get our own votedFor back from the server directly,
-            // but we can infer it isn't needed for display beyond vote counts.
-            // Kept for potential future use / highlighting.
-            return null;
-        }
-
-        // ---------- Host: start game ----------
-
-        startBtn.addEventListener('click', () => {
-            socket.emit('startGame', currentRoom);
-        });
-
-        // ---------- Video (Jitsi) ----------
-
-        initVideoBtn.addEventListener('click', async function() {
-            try {
-                if (jitsiApi) {
-                    videoContainer.classList.remove('pip-mode');
-                    showLobbyUI();
-                    window.history.pushState({ panel: "lobby" }, "");
-                    this.classList.add('hidden');
-                    goFullscreenAndPortrait();
-                    return;
-                }
-                
-                await initVideoConference();
-                window.history.pushState({ panel: "lobby" }, "");
-                if (jitsiApi) {
-                    this.classList.add('hidden');
-                    // Fullscreen + recording now trigger on videoConferenceJoined,
-                    // once the user has actually entered the call (not just on iframe load).
-                }
-            } catch (e) {
-                console.error("Jitsi framework initialization failure:", e);
+        videoContainer.classList.add('active');
+        jitsiApi = new JitsiMeetExternalAPI('8x8.vc', {
+            roomName: tokenData.roomName,
+            jwt: tokenData.token,
+            width: '100%',
+            height: '100%',
+            parentNode: videoContainer,
+            userInfo: { displayName: myUsername },
+            configOverwrite: {
+                startWithAudioMuted: false,
+                startWithVideoMuted: false,
+                prejoinPageEnabled: false,
+                disableDeepLinking: true,
+                tileViewEnabled: true
+            },
+            interfaceConfigOverwrite: {
+                TOOLBAR_BUTTONS: ['microphone', 'camera', 'hangup', 'fullscreen', 'tileview'],
+                SHOW_JITSI_WATERMARK: false
             }
         });
 
-        function goFullscreenAndPortrait() {
-            const reqFullscreen = videoContainer.requestFullscreen || 
-                                  videoContainer.webkitRequestFullscreen || 
-                                  videoContainer.msRequestFullscreen;
-            
-            if (reqFullscreen) {
-                reqFullscreen.call(videoContainer).then(() => {
-                    if (screen.orientation && screen.orientation.lock) {
-                        screen.orientation.lock('portrait').catch((err) => {
-                            console.warn("Screen orientation lock declined by system restrictions:", err);
-                        });
-                    }
-                }).catch((err) => {
-                    console.error("Fullscreen request blocked:", err);
-                });
-            }
-        }
-
-        document.addEventListener('fullscreenchange', () => {
-            if (!document.fullscreenElement && jitsiApi && !videoContainer.classList.contains('pip-mode')) {
-                videoContainer.classList.add('pip-mode');
-                initVideoBtn.innerText = "🔍 Expand Floating Video Feed";
-                initVideoBtn.classList.remove('hidden');
-                if (screen.orientation && screen.orientation.unlock) {
-                    screen.orientation.unlock();
-                }
-            }
-        });
-        document.addEventListener('webkitfullscreenchange', () => {
-            if (!document.webkitIsFullScreen && jitsiApi && !videoContainer.classList.contains('pip-mode')) {
-                videoContainer.classList.add('pip-mode');
-                initVideoBtn.innerText = "🔍 Expand Floating Video Feed";
-                initVideoBtn.classList.remove('hidden');
-                if (screen.orientation && screen.orientation.unlock) {
-                    screen.orientation.unlock();
-                }
-            }
+        jitsiApi.addEventListener('videoConferenceJoined', () => {
+            videoBtn.innerText = '🎥 Expand Video';
+            recordBtn.classList.remove('hidden');
+            goFullscreen();
+            startRecording();
         });
 
-        window.addEventListener('popstate', (event) => {
-            if (!event.state || event.state.panel !== "lobby") {
-                lobbyScreen.classList.add('hidden');
-                profilePanel.classList.add('hidden');
-                joinScreen.classList.remove('hidden');
-                
-                if (document.exitFullscreen) { document.exitFullscreen(); }
-                else if (document.webkitExitFullscreen) { document.webkitExitFullscreen(); }
-                
-                if (jitsiApi) {
-                    videoContainer.classList.remove('hidden');
-                    videoContainer.classList.add('pip-mode');
-                    
-                    initVideoBtn.innerText = "🔍 Expand Floating Video Feed";
-                    initVideoBtn.classList.remove('hidden');
+        jitsiApi.addEventListener('videoConferenceLeft', cleanup);
+        jitsiApi.addEventListener('readyToClose', cleanup);
+    }
+
+    function cleanup() {
+        videoContainer.classList.remove('active');
+        videoBtn.innerText = '🎥 Join Video';
+        recordBtn.classList.add('hidden');
+        stopRecording();
+        if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
+    }
+
+    function goFullscreen() {
+        const req = videoContainer.requestFullscreen || videoContainer.webkitRequestFullscreen;
+        if (req) {
+            req.call(videoContainer).then(() => {
+                if (screen.orientation?.lock) {
+                    screen.orientation.lock('portrait').catch(() => {});
                 }
-            }
-        });
-
-        async function initVideoConference() {
-            if (typeof JitsiMeetExternalAPI === 'undefined') {
-                console.error("Jitsi Script external dependency could not be reached.");
-                newsFeed.innerText = "⚠️ Video network unreachable. Game tracking operational via text links.";
-                newsFeed.classList.remove('hidden');
-                return;
-            }
-
-            const username = usernameInput.value ? usernameInput.value.trim() : "Operative";
-
-            let tokenData;
-            try {
-                let response;
-                try {
-                    response = await fetch('/api/video-token', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            username: username,
-                            room: currentRoom,
-                            isModerator: amIHost
-                        })
-                    });
-                } catch (networkErr) {
-                    throw new Error('Network error reaching server: ' + networkErr.message);
-                }
-
-                if (!response.ok) {
-                    let errBody = {};
-                    try {
-                        errBody = await response.json();
-                    } catch (parseErr) {
-                        throw new Error(`Server returned ${response.status} ${response.statusText} (non-JSON response)`);
-                    }
-                    throw new Error(errBody.error || `Server returned ${response.status}`);
-                }
-
-                tokenData = await response.json();
-            } catch (err) {
-                console.error("Failed to fetch JaaS video token:", err);
-                newsFeed.innerText = "⚠️ Video token error: " + err.message;
-                newsFeed.classList.remove('hidden');
-                return;
-            }
-
-            videoContainer.classList.remove('hidden');
-            const domain = "8x8.vc";
-            const options = {
-                roomName: tokenData.roomName,
-                jwt: tokenData.token,
-                width: "100%",
-                height: "100%",
-                parentNode: videoContainer,
-                userInfo: {
-                    displayName: username
-                },
-                configOverwrite: {
-                    startWithAudioMuted: false,
-                    startWithVideoMuted: false,
-                    prejoinPageEnabled: false,
-                    disableDeepLinking: true,
-                    startAudioOnly: false,
-                    channelLastN: 20,
-                    tileViewEnabled: true,
-                    disableSelfView: false,
-                    desktopSharingFrameRate: { min: 5, max: 15 }
-                },
-                interfaceConfigOverwrite: {
-                    TOOLBAR_BUTTONS: [
-                        'microphone', 'camera', 'closedcaptions', 'desktop',
-                        'fullscreen', 'fodeviceselection', 'hangup', 'chat',
-                        'settings', 'raisehand', 'tileview'
-                    ],
-                    SHOW_JITSI_WATERMARK: false,
-                    SHOW_WATERMARK_FOR_GUESTS: false
-                }
-            };
-
-            jitsiApi = new JitsiMeetExternalAPI(domain, options);
-
-            jitsiApi.addEventListener('videoConferenceJoined', () => {
-                recordBtn.classList.remove('hidden');
-                goFullscreenAndPortrait();
-                startRecording(); // auto-start; player can still tap to stop early
-            });
-
-            jitsiApi.addEventListener('videoConferenceLeft', () => {
-                videoContainer.classList.add('hidden');
-                videoContainer.classList.remove('pip-mode');
-                initVideoBtn.innerText = "🎥 Connect Video Feed";
-                initVideoBtn.classList.remove('hidden');
-                stopRecording();
-                recordBtn.classList.add('hidden');
-                jitsiApi.dispose();
-                jitsiApi = null;
-            });
-
-            jitsiApi.addEventListener('readyToClose', () => {
-                videoContainer.classList.add('hidden');
-                videoContainer.classList.remove('pip-mode');
-                initVideoBtn.innerText = "🎥 Connect Video Feed";
-                initVideoBtn.classList.remove('hidden');
-                stopRecording();
-                recordBtn.classList.add('hidden');
-                if (jitsiApi) {
-                    jitsiApi.dispose();
-                    jitsiApi = null;
-                }
-            });
+            }).catch(() => {});
         }
+    }
 
-        // ---------- Local recording (each player records THEIR OWN camera & mic) ----------
-        //
-        // This does not record the full call or other participants — it opens this
-        // player's own camera/mic directly and saves the result to their device when
-        // they stop. Nothing is uploaded anywhere. Works on mobile (unlike tab/screen
-        // recording, which Android Chrome does not support).
-        //
-        // Note: most phones only allow one app/tab to use the camera at a time, so this
-        // may briefly interrupt or compete with the camera Jitsi is already using.
-
-        recordBtn.addEventListener('click', () => {
-            if (!isRecording) {
-                startRecording();
-            } else {
-                stopRecording();
-            }
-        });
-
-        async function startRecording() {
-            if (isRecording) return;
-
-            try {
-                recordingStream = await navigator.mediaDevices.getUserMedia({
-                    video: { facingMode: "user" },
-                    audio: true
-                });
-
-                recordedChunks = [];
-                const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus')
-                    ? 'video/webm;codecs=vp9,opus'
-                    : (MediaRecorder.isTypeSupported('video/webm') ? 'video/webm' : '');
-
-                mediaRecorder = mimeType
-                    ? new MediaRecorder(recordingStream, { mimeType })
-                    : new MediaRecorder(recordingStream);
-
-                mediaRecorder.ondataavailable = (e) => {
-                    if (e.data && e.data.size > 0) recordedChunks.push(e.data);
-                };
-
-                mediaRecorder.onstop = () => {
-                    saveRecording();
-                    if (recordingStream) {
-                        recordingStream.getTracks().forEach(track => track.stop());
-                        recordingStream = null;
-                    }
-                };
-
-                mediaRecorder.start();
-                isRecording = true;
-                recordBtn.innerText = "⏹️ Stop & Save My Recording";
-                recordBtn.style.backgroundColor = "var(--accent-red)";
-                recordBtn.style.color = "white";
-                recordStatus.innerText = "🔴 Recording your camera & mic locally — this captures only your own feed, not the full call. Stop anytime to save.";
-                recordStatus.classList.remove('hidden');
-            } catch (err) {
-                console.error("Recording failed to start:", err);
-                let msg = "Couldn't start recording.";
-                if (err.name === 'NotAllowedError') {
-                    msg = "Camera/mic permission denied. Allow access in your browser settings to record.";
-                } else if (err.name === 'NotReadableError') {
-                    msg = "Camera is busy (likely in use by the video call). Try again, or stop the video call first.";
-                } else if (err.message) {
-                    msg = err.message;
-                }
-                recordStatus.innerText = "⚠️ " + msg;
-                recordStatus.classList.remove('hidden');
-            }
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && jitsiApi) {
+            if (screen.orientation?.unlock) screen.orientation.unlock();
         }
+    });
 
-        function stopRecording() {
-            if (!isRecording || !mediaRecorder) return;
-            isRecording = false;
-            recordBtn.innerText = "⏺️ Record My Camera & Mic";
-            recordBtn.style.backgroundColor = "var(--accent-gold)";
-            recordBtn.style.color = "#1a1a1a";
-            recordStatus.innerText = "💾 Saving your recording...";
-            try {
-                mediaRecorder.stop();
-            } catch (err) {
-                console.error("Error stopping recorder:", err);
-            }
-        }
+    // ── RECORDING ──
+    recordBtn.addEventListener('click', () => {
+        if (!isRecording) startRecording(); else stopRecording();
+    });
 
-        function saveRecording() {
-            if (recordedChunks.length === 0) {
-                recordStatus.innerText = "⚠️ No recording data captured.";
-                return;
-            }
-
-            const blob = new Blob(recordedChunks, { type: 'video/webm' });
-            const url = URL.createObjectURL(blob);
-            const a = document.createElement('a');
-            const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-            a.href = url;
-            a.download = `mafia-${currentRoom || 'game'}-${timestamp}.webm`;
-            document.body.appendChild(a);
-            a.click();
-            document.body.removeChild(a);
-
-            setTimeout(() => URL.revokeObjectURL(url), 5000);
-
-            recordStatus.innerText = "✅ Saved to your device's downloads (your camera/mic only, not the full call).";
+    async function startRecording() {
+        if (isRecording) return;
+        try {
+            recordingStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'user' }, audio: true });
             recordedChunks = [];
+            const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9,opus') ? 'video/webm;codecs=vp9,opus' : 'video/webm';
+            mediaRecorder = new MediaRecorder(recordingStream, { mimeType });
+            mediaRecorder.ondataavailable = e => { if (e.data?.size > 0) recordedChunks.push(e.data); };
+            mediaRecorder.onstop = saveRecording;
+            mediaRecorder.start();
+            isRecording = true;
+            recordBtn.innerText = '⏹ Stop';
+            recordStatus.innerText = '🔴 Recording your camera — tap Stop to save.';
+            recordStatus.classList.add('visible');
+        } catch (err) {
+            recordStatus.innerText = `⚠️ ${err.name === 'NotAllowedError' ? 'Camera permission denied.' : err.message}`;
+            recordStatus.classList.add('visible');
         }
-    </script>
+    }
+
+    function stopRecording() {
+        if (!isRecording || !mediaRecorder) return;
+        isRecording = false;
+        recordBtn.innerText = '⏺ Record';
+        recordStatus.innerText = '💾 Saving...';
+        try { mediaRecorder.stop(); } catch (e) {}
+        if (recordingStream) { recordingStream.getTracks().forEach(t => t.stop()); recordingStream = null; }
+    }
+
+    function saveRecording() {
+        if (!recordedChunks.length) { recordStatus.classList.remove('visible'); return; }
+        const blob = new Blob(recordedChunks, { type: 'video/webm' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `mafia-${currentRoom}-${new Date().toISOString().replace(/[:.]/g, '-')}.webm`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        setTimeout(() => URL.revokeObjectURL(url), 5000);
+        recordStatus.innerText = '✅ Saved to your downloads.';
+        recordedChunks = [];
+    }
+
+
+</script>
 </body>
 </html>
