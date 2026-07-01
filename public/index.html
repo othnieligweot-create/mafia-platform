@@ -730,220 +730,32 @@
         .record-status.visible { display: block; animation: chipIn 0.3s var(--ease); }
 
 
-        /* Hide Jitsi's native toolbar — we use our own Zoom-style one */
-        #video-container iframe {
-            border: none;
-        }
-
-        /* ─── VIDEO OVERLAY (Zoom-style full-screen) ─── */
-        #video-overlay {
+        /* ─── VIDEO (full-screen JaaS native) ─── */
+        #video-container {
             position: fixed;
             inset: 0;
             z-index: 200;
             background: #000;
             display: none;
-            flex-direction: column;
         }
 
-        #video-overlay.active { display: flex; }
-
-        #video-container {
-            flex: 1;
-            width: 100%;
-            min-height: 0;
+        #video-container.active {
+            display: block;
         }
 
-        .video-top-bar {
-            position: absolute;
-            top: 0; left: 0; right: 0;
-            z-index: 10;
-            background: linear-gradient(to bottom, rgba(0,0,0,0.75) 0%, transparent 100%);
-            padding: 14px 16px 36px;
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            transition: opacity 0.35s ease;
-        }
-
-        .video-top-bar.controls-hidden { opacity: 0; pointer-events: none; }
-
-        .video-back-btn {
-            background: rgba(255,255,255,0.15);
+        #video-container iframe {
+            width: 100% !important;
+            height: 100% !important;
             border: none;
-            border-radius: 20px;
-            color: #fff;
-            font-family: inherit;
-            font-size: 0.82rem;
-            font-weight: 600;
-            padding: 7px 14px;
-            cursor: pointer;
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            display: flex;
-            align-items: center;
-            gap: 5px;
         }
 
-        .video-back-btn:active { background: rgba(255,255,255,0.28); }
-
-        .video-meeting-info { flex: 1; }
-
-        .video-meeting-name {
-            font-size: 0.9rem;
-            font-weight: 600;
-            color: #fff;
-            text-shadow: 0 1px 4px rgba(0,0,0,0.6);
+        #video-container:fullscreen,
+        #video-container:-webkit-full-screen {
+            width: 100vw !important;
+            height: 100vh !important;
         }
 
-        .video-participant-count {
-            font-size: 0.7rem;
-            color: rgba(255,255,255,0.55);
-            margin-top: 1px;
-        }
-
-        .video-rec-pill {
-            display: none;
-            align-items: center;
-            gap: 5px;
-            background: rgba(255,59,48,0.2);
-            border: 1px solid rgba(255,59,48,0.4);
-            border-radius: 20px;
-            padding: 4px 10px;
-            font-size: 0.7rem;
-            color: #FF3B30;
-            font-weight: 600;
-        }
-
-        .video-rec-pill.active { display: flex; }
-        .rec-dot { width: 6px; height: 6px; border-radius: 50%; background: #FF3B30; animation: blink 1s ease-in-out infinite; }
-
-        .video-bottom-bar {
-            position: absolute;
-            bottom: 0; left: 0; right: 0;
-            z-index: 10;
-            background: linear-gradient(to top, rgba(0,0,0,0.88) 0%, transparent 100%);
-            padding: 36px 24px 40px;
-            display: flex;
-            align-items: flex-end;
-            justify-content: space-between;
-            transition: opacity 0.35s ease;
-        }
-
-        .video-bottom-bar.controls-hidden { opacity: 0; pointer-events: none; }
-
-        .video-controls-group {
-            display: flex;
-            gap: 18px;
-            align-items: flex-end;
-        }
-
-        .video-ctrl {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-            min-width: 48px;
-        }
-
-        .video-ctrl-icon {
-            width: 50px;
-            height: 50px;
-            border-radius: 50%;
-            background: rgba(255,255,255,0.18);
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid rgba(255,255,255,0.12);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.25rem;
-            transition: background 0.18s;
-        }
-
-        .video-ctrl:active .video-ctrl-icon { background: rgba(255,255,255,0.3); }
-        .video-ctrl.muted .video-ctrl-icon { background: rgba(255,59,48,0.35); border-color: rgba(255,59,48,0.5); }
-
-        .video-ctrl-label {
-            font-size: 0.65rem;
-            color: rgba(255,255,255,0.7);
-            font-weight: 500;
-            font-family: inherit;
-            white-space: nowrap;
-        }
-
-        .video-end-btn {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 5px;
-            background: none;
-            border: none;
-            cursor: pointer;
-            padding: 0;
-        }
-
-        .video-end-icon {
-            width: 62px;
-            height: 62px;
-            border-radius: 50%;
-            background: #FF3B30;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 1.5rem;
-            box-shadow: 0 4px 24px rgba(255,59,48,0.55);
-            transition: transform 0.15s, background 0.18s;
-        }
-
-        .video-end-btn:active .video-end-icon { transform: scale(0.92); background: #d42c22; }
-
-        .video-end-label {
-            font-size: 0.65rem;
-            color: rgba(255,255,255,0.7);
-            font-weight: 500;
-            font-family: inherit;
-        }
-
-        .video-connecting {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 18px;
-            background: #111214;
-            z-index: 6;
-            transition: opacity 0.4s ease;
-        }
-
-        .video-connecting.gone { opacity: 0; pointer-events: none; }
-
-        .connecting-spinner {
-            width: 48px;
-            height: 48px;
-            border: 3px solid rgba(201,240,255,0.12);
-            border-top-color: var(--accent);
-            border-radius: 50%;
-            animation: spin 0.85s linear infinite;
-        }
-
-        @keyframes spin { to { transform: rotate(360deg); } }
-
-        .connecting-label {
-            font-size: 0.88rem;
-            color: rgba(255,255,255,0.45);
-            font-weight: 500;
-        }
-
-
-        
-
-                /* ─── ROLE REVEAL OVERLAY ─── */
+                                /* ─── ROLE REVEAL OVERLAY ─── */
         #role-overlay {
             position: fixed;
             inset: 0;
@@ -1143,59 +955,8 @@
     <div class="role-reveal-dismiss">Tap anywhere to continue</div>
 </div>
 
-<!-- ═══ VIDEO OVERLAY (Zoom-style) ═══ -->
-<div id="video-overlay">
-    <!-- Connecting state -->
-    <div class="video-connecting" id="video-connecting">
-        <div class="connecting-spinner"></div>
-        <div class="connecting-label">Connecting to video...</div>
-    </div>
-
-    <!-- Jitsi iframe renders here -->
-    <div id="video-container"></div>
-
-    <!-- Top bar -->
-    <div class="video-top-bar" id="video-top-bar">
-        <button class="video-back-btn" id="video-back-btn">← Game</button>
-        <div class="video-meeting-info">
-            <div class="video-meeting-name" id="video-meeting-name">Room</div>
-            <div class="video-participant-count" id="video-participant-count">Connecting...</div>
-        </div>
-        <div class="video-rec-pill" id="video-rec-pill">
-            <div class="rec-dot"></div> REC
-        </div>
-    </div>
-
-    <!-- Bottom toolbar -->
-    <div class="video-bottom-bar" id="video-bottom-bar">
-        <div class="video-controls-group">
-            <button class="video-ctrl" id="vid-mic-btn">
-                <div class="video-ctrl-icon">🎙</div>
-                <span class="video-ctrl-label">Mute</span>
-            </button>
-            <button class="video-ctrl" id="vid-cam-btn">
-                <div class="video-ctrl-icon">📹</div>
-                <span class="video-ctrl-label">Stop Video</span>
-            </button>
-        </div>
-
-        <button class="video-end-btn" id="vid-end-btn">
-            <div class="video-end-icon">📵</div>
-            <span class="video-end-label">End</span>
-        </button>
-
-        <div class="video-controls-group">
-            <button class="video-ctrl" id="vid-record-btn">
-                <div class="video-ctrl-icon">⏺</div>
-                <span class="video-ctrl-label">Record</span>
-            </button>
-            <button class="video-ctrl" id="vid-participants-btn">
-                <div class="video-ctrl-icon">👥</div>
-                <span class="video-ctrl-label">Players</span>
-            </button>
-        </div>
-    </div>
-</div>
+<!-- Full-screen video container — JaaS renders its own native UI inside here -->
+<div id="video-container"></div>
 
 <script src="/socket.io/socket.io.js"></script>
 <script>
@@ -1258,21 +1019,8 @@
     const revealName = document.getElementById('reveal-name');
     const revealHint = document.getElementById('reveal-hint');
 
-    // Video overlay elements
-    const videoOverlay = document.getElementById('video-overlay');
+    // Video
     const videoContainer = document.getElementById('video-container');
-    const videoConnecting = document.getElementById('video-connecting');
-    const videoTopBar = document.getElementById('video-top-bar');
-    const videoBottomBar = document.getElementById('video-bottom-bar');
-    const videoBackBtn = document.getElementById('video-back-btn');
-    const videoMeetingName = document.getElementById('video-meeting-name');
-    const videoParticipantCount = document.getElementById('video-participant-count');
-    const videoRecPill = document.getElementById('video-rec-pill');
-    const vidMicBtn = document.getElementById('vid-mic-btn');
-    const vidCamBtn = document.getElementById('vid-cam-btn');
-    const vidEndBtn = document.getElementById('vid-end-btn');
-    const vidRecordBtn = document.getElementById('vid-record-btn');
-    const vidParticipantsBtn = document.getElementById('vid-participants-btn');
 
     // ── JOIN ──
     joinBtn.addEventListener('click', attemptJoin);
@@ -1634,18 +1382,13 @@
         }
     });
 
-    // ── VIDEO (Zoom-style overlay) ──
+    // ── VIDEO (full-screen, JaaS native UI) ──
 
-    let micMuted = false;
-    let camOff = false;
-    let controlsHideTimer = null;
-
-    // "Join Video" button in game screen
     videoBtn.addEventListener('click', async () => {
         if (jitsiApi) {
-            // Already in call — just show the overlay again
-            videoOverlay.classList.add('active');
-            showControls();
+            // Call already active — go back to fullscreen
+            videoContainer.classList.add('active');
+            goFullscreen();
             return;
         }
         videoBtn.innerText = '⏳ Connecting...';
@@ -1654,36 +1397,6 @@
         videoBtn.disabled = false;
         if (!jitsiApi) videoBtn.innerText = '🎥 Join Video';
     });
-
-    // "← Game" back button — hides overlay, call stays alive
-    videoBackBtn.addEventListener('click', () => {
-        videoOverlay.classList.remove('active');
-        videoBtn.innerText = '🎥 Return to Video';
-    });
-
-    // Tap anywhere on overlay to toggle controls
-    videoOverlay.addEventListener('click', (e) => {
-        if (e.target === videoOverlay || e.target === videoContainer) {
-            toggleControls();
-        }
-    });
-
-    function showControls() {
-        videoTopBar.classList.remove('controls-hidden');
-        videoBottomBar.classList.remove('controls-hidden');
-        clearTimeout(controlsHideTimer);
-        controlsHideTimer = setTimeout(hideControls, 3500);
-    }
-
-    function hideControls() {
-        videoTopBar.classList.add('controls-hidden');
-        videoBottomBar.classList.add('controls-hidden');
-    }
-
-    function toggleControls() {
-        const hidden = videoTopBar.classList.contains('controls-hidden');
-        if (hidden) showControls(); else hideControls();
-    }
 
     async function initVideo() {
         if (typeof JitsiMeetExternalAPI === 'undefined') {
@@ -1700,7 +1413,7 @@
             });
             if (!res.ok) {
                 const err = await res.json().catch(() => ({}));
-                throw new Error(err.error || `Server error ${res.status}`);
+                throw new Error(err.error || 'Server error ' + res.status);
             }
             tokenData = await res.json();
         } catch (err) {
@@ -1708,17 +1421,9 @@
             return;
         }
 
-        // Show overlay with connecting spinner
-        videoOverlay.classList.add('active');
-        videoConnecting.classList.remove('gone');
-        videoMeetingName.innerText = currentRoom;
-        videoParticipantCount.innerText = 'Connecting...';
-        showControls();
-
-        // Lock to portrait
-        if (screen.orientation?.lock) {
-            screen.orientation.lock('portrait').catch(() => {});
-        }
+        // Show container and go fullscreen
+        videoContainer.classList.add('active');
+        goFullscreen();
 
         jitsiApi = new JitsiMeetExternalAPI('8x8.vc', {
             roomName: tokenData.roomName,
@@ -1735,95 +1440,54 @@
                 tileViewEnabled: true
             },
             interfaceConfigOverwrite: {
-                TOOLBAR_BUTTONS: ['microphone', 'camera', 'hangup', 'tileview'],
                 SHOW_JITSI_WATERMARK: false,
-                SHOW_WATERMARK_FOR_GUESTS: false,
-                DISABLE_JOIN_LEAVE_NOTIFICATIONS: true
+                SHOW_WATERMARK_FOR_GUESTS: false
             }
         });
 
-        // Fallback: if videoConferenceJoined doesn't fire within 10s,
-        // dismiss spinner anyway so the user isn't stuck on a black screen
-        const spinnerFallback = setTimeout(() => {
-            videoConnecting.classList.add('gone');
-            videoParticipantCount.innerText = 'Connected';
-        }, 10000);
-
-        jitsiApi.addEventListener('videoConferenceJoined', (data) => {
-            clearTimeout(spinnerFallback);
-            videoConnecting.classList.add('gone');
-            videoParticipantCount.innerText = '1 participant';
+        jitsiApi.addEventListener('videoConferenceJoined', () => {
             videoBtn.innerText = '🎥 Return to Video';
-            showControls();
             startRecording();
-        });
-
-        jitsiApi.addEventListener('participantJoined', () => {
-            const count = jitsiApi.getParticipantsInfo().length;
-            videoParticipantCount.innerText = `${count} participant${count !== 1 ? 's' : ''}`;
-        });
-
-        jitsiApi.addEventListener('participantLeft', () => {
-            const count = jitsiApi.getParticipantsInfo().length;
-            videoParticipantCount.innerText = `${count} participant${count !== 1 ? 's' : ''}`;
-        });
-
-        jitsiApi.addEventListener('audioMuteStatusChanged', ({ muted }) => {
-            micMuted = muted;
-            vidMicBtn.querySelector('.video-ctrl-icon').innerText = muted ? '🔇' : '🎙';
-            vidMicBtn.querySelector('.video-ctrl-label').innerText = muted ? 'Unmute' : 'Mute';
-            vidMicBtn.classList.toggle('muted', muted);
-        });
-
-        jitsiApi.addEventListener('videoMuteStatusChanged', ({ muted }) => {
-            camOff = muted;
-            vidCamBtn.querySelector('.video-ctrl-icon').innerText = muted ? '📷' : '📹';
-            vidCamBtn.querySelector('.video-ctrl-label').innerText = muted ? 'Start Video' : 'Stop Video';
-            vidCamBtn.classList.toggle('muted', muted);
         });
 
         jitsiApi.addEventListener('videoConferenceLeft', cleanupVideo);
         jitsiApi.addEventListener('readyToClose', cleanupVideo);
     }
 
-    // ── ZOOM-STYLE TOOLBAR BUTTONS ──
+    function goFullscreen() {
+        const req = videoContainer.requestFullscreen || videoContainer.webkitRequestFullscreen;
+        if (req) {
+            req.call(videoContainer).then(() => {
+                if (screen.orientation?.lock) {
+                    screen.orientation.lock('portrait').catch(() => {});
+                }
+            }).catch(() => {});
+        }
+    }
 
-    vidMicBtn.addEventListener('click', () => {
-        jitsiApi?.executeCommand('toggleAudio');
-        showControls();
+    // Exiting fullscreen (swipe down / back button) hides the container
+    // so the game UI is visible again. The call stays alive in background.
+    document.addEventListener('fullscreenchange', () => {
+        if (!document.fullscreenElement && jitsiApi) {
+            videoContainer.classList.remove('active');
+            videoBtn.innerText = '🎥 Return to Video';
+            if (screen.orientation?.unlock) screen.orientation.unlock();
+        }
     });
-
-    vidCamBtn.addEventListener('click', () => {
-        jitsiApi?.executeCommand('toggleVideo');
-        showControls();
-    });
-
-    vidEndBtn.addEventListener('click', () => {
-        jitsiApi?.executeCommand('hangup');
-        cleanupVideo();
-    });
-
-    vidParticipantsBtn.addEventListener('click', () => {
-        // Toggle back to game screen — they can see the player list there
-        videoOverlay.classList.remove('active');
-        videoBtn.innerText = '🎥 Return to Video';
-        showControls();
-    });
-
-    vidRecordBtn.addEventListener('click', () => {
-        if (!isRecording) startRecording(); else stopRecording();
-        showControls();
+    document.addEventListener('webkitfullscreenchange', () => {
+        if (!document.webkitFullscreenElement && jitsiApi) {
+            videoContainer.classList.remove('active');
+            videoBtn.innerText = '🎥 Return to Video';
+            if (screen.orientation?.unlock) screen.orientation.unlock();
+        }
     });
 
     function cleanupVideo() {
-        videoOverlay.classList.remove('active');
-        videoConnecting.classList.remove('gone');
+        videoContainer.classList.remove('active');
         videoBtn.innerText = '🎥 Join Video';
-        micMuted = false;
-        camOff = false;
-        clearTimeout(controlsHideTimer);
         stopRecording();
         if (screen.orientation?.unlock) screen.orientation.unlock();
+        if (document.exitFullscreen) document.exitFullscreen().catch(() => {});
         if (jitsiApi) { jitsiApi.dispose(); jitsiApi = null; }
     }
 
@@ -1839,12 +1503,7 @@
             mediaRecorder.onstop = saveRecording;
             mediaRecorder.start();
             isRecording = true;
-            vidRecordBtn.querySelector('.video-ctrl-icon').innerText = '⏹';
-            vidRecordBtn.querySelector('.video-ctrl-label').innerText = 'Stop Rec';
-            vidRecordBtn.classList.add('muted');
-            videoRecPill.classList.add('active');
         } catch (err) {
-            // Recording failed silently — camera conflict with Jitsi is expected
             console.warn('Recording unavailable:', err.message);
         }
     }
@@ -1852,10 +1511,6 @@
     function stopRecording() {
         if (!isRecording || !mediaRecorder) return;
         isRecording = false;
-        vidRecordBtn.querySelector('.video-ctrl-icon').innerText = '⏺';
-        vidRecordBtn.querySelector('.video-ctrl-label').innerText = 'Record';
-        vidRecordBtn.classList.remove('muted');
-        videoRecPill.classList.remove('active');
         try { mediaRecorder.stop(); } catch (e) {}
         if (recordingStream) { recordingStream.getTracks().forEach(t => t.stop()); recordingStream = null; }
     }
@@ -1866,14 +1521,13 @@
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `mafia-${currentRoom}-${new Date().toISOString().replace(/[:.]/g, '-')}.webm`;
+        a.download = 'mafia-' + currentRoom + '-' + new Date().toISOString().replace(/[:.]/g, '-') + '.webm';
         document.body.appendChild(a);
         a.click();
         document.body.removeChild(a);
         setTimeout(() => URL.revokeObjectURL(url), 5000);
         recordedChunks = [];
     }
-
 </script>
 </body>
 </html>
