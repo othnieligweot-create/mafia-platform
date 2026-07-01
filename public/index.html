@@ -288,6 +288,13 @@
             border: 1px solid rgba(62,255,168,0.2);
         }
 
+        .role-chip.spectator {
+            background: rgba(255,255,255,0.04);
+            border: 1px solid var(--border);
+        }
+
+        .role-chip.spectator .role-chip-name { color: var(--muted); }
+
         .role-chip-icon { font-size: 1.3rem; }
 
         .role-chip-text { flex: 1; }
@@ -886,10 +893,14 @@
 
     socket.on('joinRejected', ({ reason }) => {
         if (reason === 'username-taken') {
-            alert(`"${myUsername}" is already in use in that room. Try a different handle.`);
-            joinScreen.classList.remove('hidden');
+            // Only happens if a genuinely different active session has this name.
+            // Show an error and go back to join screen.
             gameScreen.classList.add('hidden');
+            joinScreen.classList.remove('hidden');
             currentRoom = '';
+            usernameInput.value = myUsername;
+            roomIdInput.value = '';
+            alert(`"${myUsername}" is already taken in that room by another player. Try a different handle.`);
         }
     });
 
@@ -964,6 +975,7 @@
     socket.on('eliminated', () => {
         amIAlive = false;
         updateRoleChip();
+        announce('You were eliminated — you are now spectating. Watch the game unfold.', true);
     });
 
     socket.on('rejoined', ({ role, alive }) => {
@@ -1023,19 +1035,25 @@
     function updateRoleChip() {
         if (!myRole || !gameStarted) { roleChip.classList.add('hidden'); return; }
         roleChip.classList.remove('hidden');
+
+        if (!amIAlive) {
+            // Spectator mode — neutral styling, role still shown for context
+            roleChip.className = 'role-chip spectator';
+            roleChipIcon.innerText = '👁';
+            roleChipName.innerText = 'SPECTATING';
+            roleChipHint.innerText = `You were eliminated (${myRole}). Watch the rest of the game.`;
+            return;
+        }
+
         roleChip.className = `role-chip ${myRole}`;
         if (myRole === 'mafia') {
             roleChipIcon.innerText = '🔪';
             roleChipName.innerText = 'MAFIA';
-            roleChipHint.innerText = amIAlive
-                ? 'Vote secretly to eliminate a civilian each round.'
-                : 'You were eliminated.';
+            roleChipHint.innerText = 'Vote secretly to eliminate a civilian each round.';
         } else {
             roleChipIcon.innerText = '🛡';
             roleChipName.innerText = 'CIVILIAN';
-            roleChipHint.innerText = amIAlive
-                ? 'Vote to expose the mafia before they take over.'
-                : 'You were eliminated.';
+            roleChipHint.innerText = 'Vote to expose the mafia before they take over.';
         }
     }
 
@@ -1120,9 +1138,9 @@
                     <button class="btn btn-danger btn-sm" data-action="kick" data-id="${u.id}">🚪</button>
                 </div>` : ''}
                 ${publicVotes > 0 ? `<div class="vote-count">${publicVotes}</div>` : ''}
-                ${myRole === 'mafia' && mafiaVotes > 0 ? `<div class="vote-count mafia-count">${mafiaVotes}</div>` : ''}
+                ${myRole === 'mafia' && amIAlive && mafiaVotes > 0 ? `<div class="vote-count mafia-count">${mafiaVotes}</div>` : ''}
                 ${publicVotes > 0 ? `<div class="vote-bar" style="width:${(publicVotes/maxVotes)*100}%"></div>` : ''}
-                ${myRole === 'mafia' && mafiaVotes > 0 ? `<div class="vote-bar mafia-bar" style="width:${(mafiaVotes/maxMafiaVotes)*70}%; bottom: 2px"></div>` : ''}
+                ${myRole === 'mafia' && amIAlive && mafiaVotes > 0 ? `<div class="vote-bar mafia-bar" style="width:${(mafiaVotes/maxMafiaVotes)*70}%; bottom: 2px"></div>` : ''}
             `;
 
             // Vote on tap
@@ -1158,7 +1176,9 @@
         });
 
         // Update vote section label
-        if (myRole === 'mafia') {
+        if (!amIAlive) {
+            voteSectionLabel.innerText = '👁 Spectating — votes shown below';
+        } else if (myRole === 'mafia') {
             voteSectionLabel.innerHTML = 'Tap to vote &mdash; <span style="color:var(--red)">mafia kill shown in red</span>';
         } else {
             voteSectionLabel.innerText = 'Tap a player to vote them out';
